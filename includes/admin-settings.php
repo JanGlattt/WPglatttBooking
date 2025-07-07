@@ -1,18 +1,7 @@
 <?php
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-add_action( 'admin_menu', 'wpglattt_add_admin_menu' );
 add_action( 'admin_init', 'wpglattt_settings_init' );
-
-function wpglattt_add_admin_menu() {
-    add_options_page(
-        'GLATTT Bookings',
-        'GLATTT Bookings',
-        'manage_options',
-        'wpglattt-booking',
-        'wpglattt_options_page'
-    );
-}
 
 function wpglattt_settings_init() {
     add_settings_section(
@@ -25,7 +14,8 @@ function wpglattt_settings_init() {
     $fields = [
         'username'    => 'Username',
         'password'    => 'Password',
-        'business_id' => 'Business ID'
+        'business_id' => 'Business ID',
+        'service_id'  => 'Service ID'
     ];
     foreach ( $fields as $key => $label ) {
         add_settings_field(
@@ -40,16 +30,16 @@ function wpglattt_settings_init() {
 }
 
 function wpglattt_render_username() {
-    $val = esc_attr( get_option('wpglattt_username') );
-    echo "<input type='text' name='wpglattt_username' value='$val' class='regular-text'>";
+    echo "<input type='text' name='wpglattt_username' value='" . esc_attr(get_option('wpglattt_username')) . "' class='regular-text'>";
 }
 function wpglattt_render_password() {
-    $val = esc_attr( get_option('wpglattt_password') );
-    echo "<input type='password' name='wpglattt_password' value='$val' class='regular-text'>";
+    echo "<input type='password' name='wpglattt_password' value='" . esc_attr(get_option('wpglattt_password')) . "' class='regular-text'>";
 }
 function wpglattt_render_business_id() {
-    $val = esc_attr( get_option('wpglattt_business_id') );
-    echo "<input type='text' name='wpglattt_business_id' value='$val' class='regular-text'>";
+    echo "<input type='text' name='wpglattt_business_id' value='" . esc_attr(get_option('wpglattt_business_id')) . "' class='regular-text'>";
+}
+function wpglattt_render_service_id() {
+    echo "<input type='text' name='wpglattt_service_id' value='" . esc_attr(get_option('wpglattt_service_id')) . "' class='regular-text'>";
 }
 
 function wpglattt_options_page() {
