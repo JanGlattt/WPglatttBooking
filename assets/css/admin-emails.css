@@ -1,0 +1,53 @@
+/* assets/css/admin-emails.css */
+
+/* Layout für die Service-Dropdown-Wrapper */
+#service_selection_fieldset > div {
+    display: inline-block;
+    vertical-align: top;
+    width: calc(33.333% - 1em);
+    margin: 0 0.5em 1em 0.5em;
+}
+
+/* Zwei Spalten bei mittleren Bildschirmen */
+@media (max-width: 768px) {
+    #service_selection_fieldset > div {
+        width: calc(50% - 1em);
+    }
+}
+
+/* Eine Spalte bei kleinen Bildschirmen */
+@media (max-width: 480px) {
+    #service_selection_fieldset > div {
+        width: 100%;
+    }
+}
+
+/* Abstand zwischen den Trigger-Optionen (Stunden vs. Fester Zeitpunkt) */
+#trigger_row td > label {
+    display: inline-block;
+    margin-right: 2em;
+}
+
+/* Inline-Layout für 'Fester Zeitpunkt' */
+#trigger_row #admin_fields {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5em;
+}
+
+/* Eingabefelder für Tage und Uhrzeit im Inline-Layout */
+#trigger_row #admin_fields input[name="reminder_offset"] {
+    width: 4em;
+    margin-right: 0.5em;
+}
+
+#trigger_row #admin_fields select[name="schedule_day"] {
+    width: 4em;
+    margin-right: 0.5em;
+}
+
+#trigger_row #admin_fields input[name="schedule_time"] {
+    width: 6em;
+    margin-left: 0.5em;
+}

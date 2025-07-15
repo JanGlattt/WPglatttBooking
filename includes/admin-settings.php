@@ -1,51 +1,49 @@
 <?php
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-add_action( 'admin_init', 'wpglattt_settings_init' );
-
-function wpglattt_settings_init() {
+add_action( 'admin_init', 'glattt_settings_init' );
+function glattt_settings_init() {
     add_settings_section(
-        'wpglattt_api_section',
+        'glattt_api_section',
         'API Credentials',
         null,
-        'wpglattt-booking'
+        'glattt-booking'
     );
 
     $fields = [
         'username'    => 'Username',
         'password'    => 'Password',
-        'business_id' => 'Business ID',
-        'service_id'  => 'Service ID'
+        'business_id' => 'Business ID'
     ];
     foreach ( $fields as $key => $label ) {
         add_settings_field(
-            'wpglattt_' . $key,
+            'glattt_' . $key,
             $label,
-            'wpglattt_render_' . $key,
-            'wpglattt-booking',
-            'wpglattt_api_section'
+            'glattt_render_' . $key,
+            'glattt-booking',
+            'glattt_api_section'
         );
-        register_setting( 'wpglattt-booking', 'wpglattt_' . $key );
+        register_setting( 'glattt-booking', 'glattt_' . $key );
     }
 }
 
-function wpglattt_render_username() {
-    echo "<input type='text' name='wpglattt_username' value='" . esc_attr(get_option('wpglattt_username')) . "' class='regular-text'>";
+function glattt_render_username() {
+    $v = esc_attr( get_option( 'glattt_username', '' ) );
+    echo "<input type='text' name='glattt_username' value='$v' class='regular-text'>";
 }
-function wpglattt_render_password() {
-    echo "<input type='password' name='wpglattt_password' value='" . esc_attr(get_option('wpglattt_password')) . "' class='regular-text'>";
+function glattt_render_password() {
+    $v = esc_attr( get_option( 'glattt_password', '' ) );
+    echo "<input type='password' name='glattt_password' value='$v' class='regular-text'>";
 }
-function wpglattt_render_business_id() {
-    echo "<input type='text' name='wpglattt_business_id' value='" . esc_attr(get_option('wpglattt_business_id')) . "' class='regular-text'>";
-}
-function wpglattt_render_service_id() {
-    echo "<input type='text' name='wpglattt_service_id' value='" . esc_attr(get_option('wpglattt_service_id')) . "' class='regular-text'>";
+function glattt_render_business_id() {
+    $v = esc_attr( get_option( 'glattt_business_id', '' ) );
+    echo "<input type='text' name='glattt_business_id' value='$v' class='regular-text'>";
 }
 
-function wpglattt_options_page() {
-    echo '<div class="wrap"><h1>GLATTT Bookings Einstellungen</h1><form method="post" action="options.php">';
-    settings_fields( 'wpglattt-booking' );
-    do_settings_sections( 'wpglattt-booking' );
+function glattt_options_page() {
+    echo '<div class="wrap"><h1>glattt Bookings Einstellungen</h1><form method="post" action="options.php">';
+    settings_fields( 'glattt-booking' );
+    do_settings_sections( 'glattt-booking' );
     submit_button();
     echo '</form></div>';
 }

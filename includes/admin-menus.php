@@ -1,37 +1,59 @@
 <?php
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-// Hauptmenü und Untermenüs registrieren
-add_action( 'admin_menu', 'wpglattt_register_menus' );
-function wpglattt_register_menus() {
+/**
+ * Haupt- und Untermenüs registrieren
+ */
+add_action( 'admin_menu', 'glattt_register_menus' );
+function glattt_register_menus() {
     // Top-Level Menü
     add_menu_page(
-        'glattt Bookings',       // Page Title
-        'glattt Bookings',       // Menu Label (Groß-/Kleinschreibung)
-        'manage_options',        // Capability
-        'wpglattt-booking',      // Menu Slug
-        'wpglattt_options_page', // Function aus admin-settings.php
-        'dashicons-calendar-alt',// Icon
-        60                       // Position
+        'glattt Bookings',
+        'glattt Bookings',
+        'manage_options',
+        'glattt-booking',
+        'glattt_options_page',
+        'dashicons-calendar-alt',
+        60
     );
 
-    // Untermenü: Einstellungen (zeigt dieselbe Seite wie Top-Level)
+    // 1) Einstellungen
     add_submenu_page(
-        'wpglattt-booking',      // Parent slug
-        'Einstellungen',        // Page Title
-        'Einstellungen',        // Menu Label
-        'manage_options',        // Capability
-        'wpglattt-booking',      // Menu Slug
-        'wpglattt_options_page'  // Callback
+        'glattt-booking',
+        'Einstellungen',
+        'Einstellungen',
+        'manage_options',
+        'glattt-booking',
+        'glattt_options_page'
     );
 
-    // Untermenü: Institute
+    // 2) Institute
     add_submenu_page(
-        'wpglattt-booking',      // Parent slug
-        'Institute',             // Page Title
-        'Institute',             // Menu Label
-        'manage_options',        // Capability
-        'wpglattt-institutes',   // Menu Slug
-        'wpglattt_institutes_page' // Callback in institutes.php
+        'glattt-booking',
+        'Institute',
+        'Institute',
+        'manage_options',
+        'glattt-institutes',
+        'glattt_institutes_page'
+    );
+
+    // 3) Institut-Details
+    add_submenu_page(
+        'glattt-booking',
+        'Institut-Details',
+        'Institut-Details',
+        'manage_options',
+        'glattt-institute-details',
+        'glattt_institute_details_page'
+    );
+
+    // 4) Services
+    add_submenu_page(
+        'glattt-booking',
+        'Services',
+        'Services',
+        'manage_options',
+        'glattt-services',
+        'glattt_services_page'
     );
 }

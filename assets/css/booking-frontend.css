@@ -1,0 +1,324 @@
+/* Datei: assets/css/booking-frontend.css */
+
+/* ---------------------------------------
+   Slider-Wrapper für Step 1 + Step 2
+--------------------------------------- */
+#glattt-booking-widget {
+  overflow: hidden;
+  height: auto !important;
+  min-height: calc(150px + 2rem);
+}
+
+/* Stattdessen: normale hidden-Klasse */
+.hidden {
+  display: none;
+}
+
+/* Stellt sicher, dass die zweite Seite sichtbar bleibt (weiß) */
+.step-2 {
+  background: #fff;
+}
+
+/* Wrapper, der beide Steps nebeneinander hält */
+#glattt-booking-widget .steps-wrapper {
+  display: flex;
+  width: 200%;              /* 2 × 100% */
+  transform: translateX(0);
+  transition: transform 0.3s ease;
+  align-items: flex-start;  /* Höhe = max(child-height) */
+}
+
+/* Jeder Step nimmt 50% vom Wrapper ein */
+#glattt-booking-widget .steps-wrapper .step-1,
+#glattt-booking-widget .steps-wrapper .step-2 {
+  width: 50%;
+  flex-shrink: 0;
+}
+
+/* Verstecken via Visibility, nicht per display:none */
+#glattt-booking-widget .step-2.hidden {
+  /* wir halten es im Flow, nur unsichtbar */
+  visibility: hidden;
+  pointer-events: none;
+}
+#glattt-booking-widget .step-1.hidden {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* Gesamt-Container */
+#glattt-booking-widget {
+  position: relative; /* für Spinner-Overlay */
+  max-width: 800px;
+  margin: 2rem auto;
+  padding: 1rem;
+  background: #fff;
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+/* Spinner Overlay */
+#glattt-booking-widget.loading::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(255,255,255,0.8);
+  z-index: 10;
+}
+#glattt-booking-widget.loading::after {
+  content: '';
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 40px; height: 40px;
+  margin: -20px 0 0 -20px;
+  border: 4px solid rgba(0,0,0,0.1);
+  border-top: 4px solid #E1B520;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  z-index: 11;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Institute Selector als Verlauf + Hintergrundbild */
+.institute-selector {
+  width: 100%;
+  position: relative;
+  min-height: 150px;
+  margin-bottom: 1rem;
+  /* Verlauf 10% bis 100%, dann Bild */
+  background-color: #E1B520;
+  background-image:
+    linear-gradient(to right, rgb(225, 181, 32) 10%, rgba(225, 181, 32, 0) 130%),
+    url(''); /* wird per JS mit b.imageUrl gefüllt */
+  background-repeat: no-repeat, no-repeat;
+  /* Bild füllt komplett, Objekt wird contain skaliert */
+  background-size: auto, cover;
+  background-position: left center;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start; /* Logo/Text linksbündig */
+  border-radius: 0.5rem;  /* abgerundete Ecken */
+  overflow: hidden;
+}
+
+/* Pfeile wieder einfache Kreise */
+.institute-prev,
+.institute-next {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255,255,255,0.3);
+  border: none;
+  color: #fff;
+  font-size: 2rem;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  cursor: pointer;
+  z-index: 2;
+}
+.institute-prev { left: 1rem; }
+.institute-next { right: 1rem; }
+
+/* Institut-Info linksbündig */
+.institute-info {
+  position: relative;
+  z-index: 2;
+  color: #fff;
+  text-align: left;
+  padding: 0;
+  width: 100%;
+}
+.institute-name {
+  margin: 0;
+  font-size: 2rem;
+  color: #fff;
+  text-shadow: 1px 1px 5px #0000004a;
+}
+.institute-address {
+  margin: 0.5rem 0 0;
+  padding-bottom: 0;
+}
+
+/* Neuer Container für Bild/Text */
+.institute-display {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start; /* linken Rand anpegeln */
+  padding-left: 5rem;   /* Platz für .institute-prev */
+  padding-right: 5rem;  /* Platz für .institute-next */
+  padding-top: 20px;
+  padding-bottom: 20px;
+}
+
+/* Service Select */
+#glattt-service {
+  font-size: 1.1rem;
+  border-radius: 0.25rem;
+  padding: 0.5rem;
+  width: 100%;
+  margin-bottom: 1rem;
+}
+.service-select label {
+  display: none;
+}
+
+/* Week Navigation */
+.week-nav {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin: 1rem 0;
+}
+.week-nav button {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+.week-nav button:disabled {
+  opacity: .4;
+  cursor: default;
+}
+
+/* Timetable Container – horizontal scrollbar */
+.timetable-container {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin-left: 0;
+  padding-bottom: 0.5rem;
+}
+
+/* Fixe Spaltenbreite */
+.weekdays-row,
+.block-grid {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 120px; /* feste Breite pro Tag */
+  gap: 0.5rem;
+  min-width: calc(120px * 6 + 0.5rem * 5);
+}
+.weekdays-row {
+  margin-bottom: 1rem;
+}
+.weekdays-row .day-header {
+  text-align: center;
+  font-weight: bold;
+  margin-bottom: .5rem;
+}
+
+/* Grid für jeden Tag */
+.block-grid {
+  margin-bottom: .5rem;
+}
+.block-grid .day-block {
+  display: flex;
+  flex-direction: column;
+  padding: .5rem;
+}
+
+/* Termin-Pillen */
+.block-grid .timeslot {
+  flex: 0 0 auto;
+  width: 100%;
+  padding: .75rem;
+  margin-bottom: .5rem;
+  background: #E1B520;
+  color: #fff;
+  border: none;
+  border-radius: 1rem;
+  text-align: center;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background .2s;
+}
+.block-grid .timeslot:hover {
+  background: #c39a18;
+}
+
+/* Modal Styles – bleiben unverändert */
+#glattt-booking-modal {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+#glattt-booking-modal.hidden {
+  display: none;
+}
+.modal-content {
+  background: #fff;
+  padding: 1.5rem;
+  border-radius: .5rem;
+  width: 90%;
+  max-width: 400px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+.modal-content h2 {
+  margin: 0 0 1rem;
+}
+.modal-content form label {
+  display: block;
+  margin-bottom: .75rem;
+  font-weight: bold;
+}
+.modal-content form input,
+.modal-content form textarea {
+  width: 100%;
+  padding: .5rem;
+  margin: .25rem 0 1rem;
+  border: 1px solid #ccc;
+  border-radius: .25rem;
+  box-sizing: border-box;
+}
+.modal-content form button {
+  width: 100%;
+  padding: .75rem;
+  background: #E1B520;
+  color: #fff;
+  border: none;
+  border-radius: .25rem;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background .2s;
+}
+.modal-content form button:hover {
+  background: #c39a18;
+}
+
+/* Schritt-2: „Zurück“-Link statt Button */
+.go-back-link {
+  font-size: 1.2rem;
+  display: inline-block;
+  margin-bottom: 0;
+  padding: 0.25rem 0.5rem;
+  color: #E1B520;
+  cursor: pointer;
+  text-decoration: none;
+  background: none;
+  border: none;
+}
+.go-back-link:hover {
+  text-decoration: underline;
+}
+
+/* STEP-2: Formular-Einstellungen */
+.step-2 form label {
+  font-size: 1rem;    /* kleinere Label-Schrift */
+  margin-bottom: 1.5rem;  /* mehr Abstand unter jedem Feld */
+  font-weight: normal !important;
+}
+
+.step-2 form input,
+.step-2 form textarea {
+  font-size: 1rem !important;        /* größerer Input-Text */
+  padding: 0.4rem 0.6rem !important;  /* kompakteres Innen-Padding */
+  margin-bottom: 1rem !important;
+}

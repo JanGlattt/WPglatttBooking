@@ -1,0 +1,90 @@
+/* assets/css/style.css (Admin & Frontend) */
+
+/* Container der Karten */
+.glattt-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  margin-top: 16px;
+}
+
+/* Einzelne Karte */
+.glattt-card {
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  position: relative;
+  width: 250px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.glattt-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+/* Inaktives Institut etwas ausgegraut */
+.glattt-card.inactive {
+  opacity: 0.6;
+}
+
+/* Bildbereich */
+.glattt-card .card-img {
+  width: 100%;
+  height: 150px;
+  background-size: cover;
+  background-position: center;
+}
+.glattt-card .card-img.empty {
+  background-color: #f0f0f0;
+}
+
+/* Inhalt */
+.glattt-card .card-content {
+  padding: 16px;
+}
+.glattt-card .card-content .name {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 6px;
+}
+.glattt-card .card-content .address {
+  font-size: 14px;
+  color: #555;
+  margin-bottom: 12px;
+}
+.glattt-card .card-content .id {
+  font-size: 12px;
+  color: #888;
+}
+
+/* Edit-Icon */
+.glattt-card .edit-btn {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  font-size: 18px;
+  color: #888;
+}
+.glattt-card .edit-btn:hover {
+  color: #333;
+}
+
+/* Toggle-Button oben rechts */
+.glattt-card .toggle-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(255,255,255,0.9);
+  border-radius: 50%;
+  padding: 4px;
+  font-size: 16px;
+  color: #444;
+  text-decoration: none;
+}
+.glattt-card .toggle-btn .dashicons {
+  vertical-align: middle;
+}
+.glattt-card .toggle-btn:hover {
+  background: #fff;
+  color: #000;
+}
