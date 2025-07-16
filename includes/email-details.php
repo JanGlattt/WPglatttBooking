@@ -70,6 +70,10 @@ function glattt_email_details_page() {
         // Betreff und Inhalt
         $subject            = isset( $_POST['subject'] )            ? sanitize_text_field( $_POST['subject'] )            : '';
         $content            = isset( $_POST['content'] )            ? wp_kses_post( $_POST['content'] )                   : '';
+        // Recipients (To, CC, BCC)
+        $to_addresses  = isset($_POST['to_addresses'])  ? sanitize_text_field($_POST['to_addresses'])  : '';
+        $cc_addresses  = isset($_POST['cc_addresses'])  ? sanitize_text_field($_POST['cc_addresses'])  : '';
+        $bcc_addresses = isset($_POST['bcc_addresses']) ? sanitize_text_field($_POST['bcc_addresses']) : '';
 
         // Test-Mail?
         if ( ! empty( $_POST['test_email'] ) ) {
@@ -78,6 +82,8 @@ function glattt_email_details_page() {
                 // Platzhalter mit Beispieldaten füllen
                 $placeholder = [
                     '{CUSTOMER_NAME}'           => 'Max Mustermann',
+                    '{CUSTOMER_FIRSTNAME}'      => 'Max',
+                    '{CUSTOMER_LASTNAME}'       => 'Mustermann',
                     '{CUSTOMER_EMAIL}'          => 'max@example.com',
                     '{APPOINTMENT_DATE}'        => date_i18n( 'd.m.Y' ),
                     '{APPOINTMENT_TIME_START}'  => '10:00',
@@ -99,6 +105,21 @@ function glattt_email_details_page() {
                             $first_branch['branchId']
                         )
                     );
+                    // Telefonnummer und WhatsApp-Nummer aus Meta
+                    $meta_phone = $wpdb->get_var(
+                        $wpdb->prepare(
+                            "SELECT phone FROM {$wpdb->prefix}glattt_institute_meta WHERE branch_id = %s",
+                            $first_branch['branchId']
+                        )
+                    );
+                    $meta_whatsapp = $wpdb->get_var(
+                        $wpdb->prepare(
+                            "SELECT whatsapp FROM {$wpdb->prefix}glattt_institute_meta WHERE branch_id = %s",
+                            $first_branch['branchId']
+                        )
+                    );
+                    $branch_phone = $meta_phone;
+                    $branch_whatsapp = $meta_whatsapp;
                     if ( $row ) {
                         $placeholder['{INSTITUTE_EMAIL}'] = $row->email;
                     }
@@ -108,6 +129,13 @@ function glattt_email_details_page() {
                     $city   = $first_branch['city']   ?? '';
                     $addr   = array_filter([ $street, trim("$zip $city") ]);
                     $placeholder['{INSTITUTE_ADDRESS}'] = implode(', ', $addr);
+                    // Neue Platzhalter für Telefon und WhatsApp
+                    $placeholder['{INSTITUTE_PHONE}']    = $branch_phone ?? '';
+                    $placeholder['{INSTITUTE_WHATSAPP}'] = $branch_whatsapp ?? '';
+                } else {
+                    // Falls kein Branch, trotzdem Platzhalter initialisieren
+                    $placeholder['{INSTITUTE_PHONE}']    = '';
+                    $placeholder['{INSTITUTE_WHATSAPP}'] = '';
                 }
 
                 $test_subject = strtr( $subject,  $placeholder );
@@ -138,6 +166,9 @@ function glattt_email_details_page() {
                 'schedule_time'     => $email_type === 4 ? $schedule_time : null,
                 'subject'           => $subject,
                 'content'           => $content,
+                'to_addresses'      => $to_addresses,
+                'cc_addresses'      => $cc_addresses,
+                'bcc_addresses'     => $bcc_addresses,
             ];
             if ( $edit_mode ) {
                 $updated = $wpdb->update( $table, $data, [ 'id' => $template_id ] );
@@ -178,6 +209,9 @@ function glattt_email_details_page() {
             $schedule_time      = $template->schedule_time;
             $subject            = $template->subject;
             $content            = $template->content;
+            $to_addresses       = $template->to_addresses  ?? '';
+            $cc_addresses       = $template->cc_addresses  ?? '';
+            $bcc_addresses      = $template->bcc_addresses ?? '';
             $selected_branches  = ! empty( $branch_ids_value )
                                  ? array_map( 'trim', explode( ',', $branch_ids_value ) )
                                  : [];
@@ -204,6 +238,9 @@ function glattt_email_details_page() {
         $all_services      = 0;
         $selected_branches = [];
         $selected_services = [];
+        $to_addresses      = '';
+        $cc_addresses      = '';
+        $bcc_addresses     = '';
     }
 
     // ----- Ausgabe der Admin-Seite -----
@@ -230,24 +267,20 @@ function glattt_email_details_page() {
     echo '<input name="name" type="text" value="' . esc_attr( $name ?? '' ) . '" class="regular-text" required>';
     echo '</td></tr>';
 
-    // Empfänger (Kunde, Standort, Administration)
-    echo '<tr><th scope="row">Empfänger</th><td>';
-    $opts = [0=>'Nicht senden',1=>'Als An (TO)',2=>'Als CC',3=>'Als BCC'];
-    echo 'Kunde: <select name="customer_type">';
-    foreach ( $opts as $val=>$label ) {
-        echo '<option value="' . $val . '"' . selected( $customer_type, $val, false ) . '>' . esc_html( $label ) . '</option>';
-    }
-    echo '</select>&nbsp;&nbsp;';
-    echo 'Standort: <select name="location_type">';
-    foreach ( $opts as $val=>$label ) {
-        echo '<option value="' . $val . '"' . selected( $location_type, $val, false ) . '>' . esc_html( $label ) . '</option>';
-    }
-    echo '</select>&nbsp;&nbsp;';
-    echo 'Administration: <select name="admin_type">';
-    foreach ( $opts as $val=>$label ) {
-        echo '<option value="' . $val . '"' . selected( $admin_type, $val, false ) . '>' . esc_html( $label ) . '</option>';
-    }
-    echo '</select>';
+    // Recipients fields
+    echo '<tr><th scope="row">An (To)</th><td>';
+    echo '<input name="to_addresses" type="text" value="' . esc_attr($to_addresses ?? '') . '" class="regular-text">';
+    echo '<p class="description">Multiple addresses comma-separated. Shortcodes allowed.</p>';
+    echo '</td></tr>';
+
+    echo '<tr><th scope="row">CC</th><td>';
+    echo '<input name="cc_addresses" type="text" value="' . esc_attr($cc_addresses ?? '') . '" class="regular-text">';
+    echo '<p class="description">Multiple addresses comma-separated. Shortcodes allowed.</p>';
+    echo '</td></tr>';
+
+    echo '<tr><th scope="row">BCC</th><td>';
+    echo '<input name="bcc_addresses" type="text" value="' . esc_attr($bcc_addresses ?? '') . '" class="regular-text">';
+    echo '<p class="description">Multiple addresses comma-separated. Shortcodes allowed.</p>';
     echo '</td></tr>';
 
     // Standorte
@@ -338,7 +371,7 @@ function glattt_email_details_page() {
     echo '</table>';
 
     // Platzhalter-Hinweis, Betreff, Inhalt
-    echo '<p><strong>Verfügbare Platzhalter:</strong> {CUSTOMER_NAME}, {CUSTOMER_EMAIL}, {APPOINTMENT_DATE}, {APPOINTMENT_TIME_START}, {APPOINTMENT_TIME_END}, {INSTITUTE_NAME}, {INSTITUTE_EMAIL}, {INSTITUTE_ADDRESS}</p>';
+    echo '<p><strong>Verfügbare Platzhalter:</strong> {CUSTOMER_FIRSTNAME}, {CUSTOMER_LASTNAME}, {CUSTOMER_EMAIL}, {APPOINTMENT_DATE}, {APPOINTMENT_TIME_START}, {APPOINTMENT_TIME_END}, {INSTITUTE_NAME}, {INSTITUTE_EMAIL}, {INSTITUTE_ADDRESS}, {INSTITUTE_PHONE}, {INSTITUTE_WHATSAPP}</p>';
     echo '<p><label for="subject"><strong>Betreff:</strong></label><br>';
     echo '<input type="text" name="subject" id="subject" value="' . esc_attr( $subject ?? '' ) . '" class="large-text"></p>';
     echo '<p><label for="email_content"><strong>Inhalt:</strong></label></p>';

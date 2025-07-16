@@ -47,22 +47,35 @@ function glattt_send_booking_confirmation_email( $client_id, $booking ) {
         $content = strtr( $tmpl->content, $placeholders );
 
         // Empfänger ermitteln
-        $to = [];
-        if ( intval( $tmpl->customer_type ) === 1 ) {
-            $to[] = $client['email'];
-        }
-        if ( intval( $tmpl->location_type ) === 1 ) {
-            $to[] = get_option( 'admin_email' ); // stub: Standort-Mail aus Meta ergänzen
-        }
-        if ( intval( $tmpl->admin_type ) === 1 ) {
-            $to[] = get_option( 'admin_email' );
-        }
+        $to_addresses = strtr( $tmpl->to_address ?? '', $placeholders );
+        $cc_addresses = strtr( $tmpl->cc_address ?? '', $placeholders );
+        $bcc_addresses = strtr( $tmpl->bcc_address ?? '', $placeholders );
+
+        $to = array_filter(array_map('trim', explode(',', $to_addresses)));
+        $cc = array_filter(array_map('trim', explode(',', $cc_addresses)));
+        $bcc = array_filter(array_map('trim', explode(',', $bcc_addresses)));
+
         if ( empty( $to ) ) {
             continue;
         }
 
-        // HTML-Header
-        $headers = [ 'Content-Type: text/html; charset=UTF-8' ];
+        // Absender-Adresse aus Template (ggf. mit Platzhaltern ersetzt)
+        $from_address = ! empty( $tmpl->from_address ) 
+            ? strtr( $tmpl->from_address, $placeholders ) 
+            : get_option( 'admin_email' );
+
+        // HTML-Header mit From:
+        $headers = [
+            'Content-Type: text/html; charset=UTF-8',
+            'From: ' . $from_address,
+        ];
+
+        if ( ! empty( $cc ) ) {
+            $headers[] = 'Cc: ' . implode( ', ', $cc );
+        }
+        if ( ! empty( $bcc ) ) {
+            $headers[] = 'Bcc: ' . implode( ', ', $bcc );
+        }
 
         // Versand
         wp_mail( $to, $subject, $content, $headers );

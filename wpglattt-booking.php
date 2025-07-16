@@ -2,8 +2,8 @@
 /**
  * Plugin Name:     glattt Bookings
  * Description:     Phorest-Buchungs-API als WordPress-Plugin.
- * Version:         0.3.1
- * Author:          Dein Name
+ * Version:         0.4.0
+ * Author:          Jan für glattt
  * Text Domain:     glattt-booking
  */
 if ( ! defined( 'ABSPATH' ) ) exit;
@@ -24,6 +24,8 @@ require_once WPGLATTT_PATH . 'includes/shortcodes.php';
 require_once WPGLATTT_PATH . 'includes/frontend-booking.php';
 require_once WPGLATTT_PATH . 'includes/emails.php';
 require_once WPGLATTT_PATH . 'includes/email-details.php';
+require_once WPGLATTT_PATH . 'includes/email-sender.php';
+require_once WPGLATTT_PATH . 'includes/bookings-overview.php';
 
 /**
  * Enqueue Frontend Assets for Booking Shortcode
@@ -116,6 +118,8 @@ function glattt_install_tables() {
         branch_id VARCHAR(50) NOT NULL,
         custom_name TEXT,
         email VARCHAR(100),
+        phone VARCHAR(20),
+        whatsapp VARCHAR(20),
         image_id BIGINT UNSIGNED,
         open_mon_from TIME, open_mon_to TIME,
         open_tue_from TIME, open_tue_to TIME,
@@ -140,6 +144,8 @@ function glattt_install_tables() {
     $table3 = $wpdb->prefix . 'glattt_booking_logs';
     $sql3 = "CREATE TABLE $table3 (
         id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+        client_id VARCHAR(50) NOT NULL,
+        appointment_id VARCHAR(50),
         timestamp DATETIME NOT NULL,
         branch_id VARCHAR(50) NOT NULL,
         service_id VARCHAR(50) NOT NULL,
@@ -174,6 +180,9 @@ function glattt_install_tables() {
         schedule_interval VARCHAR(20),
         schedule_day TINYINT(1),
         schedule_time TIME,
+        to_addresses VARCHAR(255) DEFAULT '',
+        cc_addresses VARCHAR(255) DEFAULT '',
+        bcc_addresses VARCHAR(255) DEFAULT '',
         subject VARCHAR(255),
         content LONGTEXT,
         PRIMARY KEY  (id)

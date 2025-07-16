@@ -1,6 +1,8 @@
 <?php
 if ( ! defined( 'ABSPATH' ) ) exit;
 
+require_once WPGLATTT_PATH . 'includes/email-sender.php';
+
 /**
  * includes/frontend-booking.php
  * Frontend Shortcode & AJAX-Endpunkte
@@ -294,27 +296,137 @@ function glattt_book_appointment() {
         wp_send_json_error([ 'message' => "Fehler bei der Buchung (HTTP {$booking_code}): {$err}" ]);
     }
 
+    // Decode booking response to extract appointment ID
+    $booking_data = json_decode( wp_remote_retrieve_body( $booking_resp ), true );
+    $appointment_id = '';
+    if ( ! empty( $booking_data['clientAppointmentSchedules'][0]['serviceSchedules'][0]['appointmentId'] ) ) {
+        $appointment_id = $booking_data['clientAppointmentSchedules'][0]['serviceSchedules'][0]['appointmentId'];
+    }
+
     // 4) Log & Redirect
     global $wpdb;
+    // --- DateTime handling for DB and email ---
+    $wp_tz = new DateTimeZone( wp_timezone_string() );
+    $start_dt_obj = new DateTime( '@' . (int)($startMs / 1000) );
+    $end_dt_obj = new DateTime( '@' . (int)($endMs / 1000) );
+    $start_dt_obj->setTimezone( $wp_tz );
+    $end_dt_obj->setTimezone( $wp_tz );
+    // For DB
+    $start_db = $start_dt_obj->format('Y-m-d H:i:s');
+    $end_db   = $end_dt_obj->format('Y-m-d H:i:s');
+    // For email placeholders
+    $start_dt = $start_dt_obj->format('d.m.Y');
+    $start_tm = $start_dt_obj->format('H:i');
+    $end_tm   = $end_dt_obj->format('H:i');
+
     $wpdb->insert(
         $wpdb->prefix . 'glattt_booking_logs',
         [
-            'timestamp'  => current_time( 'mysql' ),
-            'branch_id'  => $branchId,
-            'service_id' => $serviceId,
-            'start_time' => date( 'Y-m-d H:i:s', $startMs / 1000 ),
-            'end_time'   => date( 'Y-m-d H:i:s', $endMs   / 1000 ),
-            'firstname'  => $firstname,
-            'lastname'   => $lastname,
-            'email'      => $email,
-            'phone'      => $phone,
-            'message'    => $message,
-            'status'     => 'success',
-            'error_msg'  => '',
-            'referrer'   => sanitize_text_field( $_SERVER['HTTP_REFERER'] ?? '' ),
-            'query'      => wp_json_encode( $_GET ),
+            'timestamp'      => current_time( 'mysql' ),
+            'client_id'      => $client_id,
+            'branch_id'      => $branchId,
+            'service_id'     => $serviceId,
+            'start_time'     => $start_db,
+            'end_time'       => $end_db,
+            'firstname'      => $firstname,
+            'lastname'       => $lastname,
+            'email'          => $email,
+            'phone'          => $phone,
+            'message'        => $message,
+            'status'         => 'success',
+            'error_msg'      => '',
+            'referrer'       => sanitize_text_field( $_SERVER['HTTP_REFERER'] ?? '' ),
+            'query'          => wp_json_encode( $_GET ),
+            'appointment_id' => $appointment_id,
         ]
     );
+
+    // --- Institut-Daten per API holen ---
+    $api_br           = new GLATTT_Phorrest_API();
+    $branches_list    = $api_br->get_branches();
+    $institute_name   = '';
+    $institute_address= '';
+    $institute_email  = '';
+    if ( is_array( $branches_list ) ) {
+        foreach ( $branches_list as $binfo ) {
+            if ( isset( $binfo['branchId'] ) && $binfo['branchId'] === $branchId ) {
+                $institute_name = $binfo['name'] ?? '';
+                $address_parts  = [];
+                if ( ! empty( $binfo['streetAddress1'] ) ) {
+                    $address_parts[] = $binfo['streetAddress1'];
+                }
+                if ( ! empty( $binfo['city'] ) ) {
+                    $address_parts[] = $binfo['city'];
+                }
+                $institute_address = implode(', ', $address_parts);
+                break;
+            }
+        }
+    }
+    // Institut-Email aus der Meta-Tabelle
+    $meta_email = $wpdb->get_var(
+        $wpdb->prepare(
+            "SELECT email FROM {$wpdb->prefix}glattt_institute_meta WHERE branch_id = %s",
+            $branchId
+        )
+    );
+    $institute_email = $meta_email ?: '';
+
+    // Institut-Bild URL aus Meta-Tabelle
+    $meta_table = $wpdb->prefix . 'glattt_institute_meta';
+    $image_id = $wpdb->get_var(
+        $wpdb->prepare(
+            "SELECT image_id FROM {$meta_table} WHERE branch_id = %s",
+            $branchId
+        )
+    );
+    $institute_image_url = $image_id ? wp_get_attachment_url( intval( $image_id ) ) : '';
+
+    // Institut: Telefonnummer und WhatsApp-Nummer aus der Meta-Tabelle
+$meta_phone = $wpdb->get_var(
+    $wpdb->prepare(
+        "SELECT phone FROM {$wpdb->prefix}glattt_institute_meta WHERE branch_id = %s",
+        $branchId
+    )
+);
+$meta_whatsapp = $wpdb->get_var(
+    $wpdb->prepare(
+        "SELECT whatsapp FROM {$wpdb->prefix}glattt_institute_meta WHERE branch_id = %s",
+        $branchId
+    )
+);
+$institute_phone    = $meta_phone    ?: '';
+$institute_whatsapp = $meta_whatsapp ?: '';
+
+    // --- C) E-Mail Versand bei Buchung (nun zentral) ---
+    if ( class_exists( 'GLATTT_Email_Sender' ) ) {
+        $template_ids = $wpdb->get_col(
+            $wpdb->prepare(
+                "SELECT id FROM {$wpdb->prefix}glattt_email_templates WHERE email_type = %d",
+                1
+            )
+        );
+        foreach ( $template_ids as $tpl_id ) {
+            GLATTT_Email_Sender::send_template(
+                $tpl_id,
+                [
+                    '{CUSTOMER_FIRSTNAME}'     => $firstname,
+                    '{CUSTOMER_LASTNAME}'      => $lastname,
+                    '{CUSTOMER_NAME}'          => "{$firstname} {$lastname}",
+                    '{CUSTOMER_EMAIL}'         => $email,
+                    '{APPOINTMENT_DATE}'       => $start_dt,
+                    '{APPOINTMENT_TIME_START}' => $start_tm,
+                    '{APPOINTMENT_TIME_END}'   => $end_tm,
+                    '{INSTITUTE_NAME}'         => $institute_name,
+                    '{INSTITUTE_EMAIL}'        => $institute_email,
+                    '{INSTITUTE_ADDRESS}'      => $institute_address,
+                    '{INSTITUTE_IMAGE_URL}'    => $institute_image_url,
+                    '{INSTITUTE_PHONE}'        => $institute_phone,
+                    '{INSTITUTE_WHATSAPP}'     => $institute_whatsapp,
+                ]
+            );
+        }
+    }
 
     wp_send_json_success([ 'redirect' => site_url( '/danke-buchung' ) ]);
 }

@@ -44,6 +44,8 @@ function glattt_options_page() {
     echo '<div class="wrap"><h1>glattt Bookings Einstellungen</h1><form method="post" action="options.php">';
     settings_fields( 'glattt-booking' );
     do_settings_sections( 'glattt-booking' );
+    echo '<div id="glattt-settings-form">';
     submit_button();
+    echo '</div>';
     echo '</form></div>';
 }

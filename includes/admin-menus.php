@@ -56,4 +56,14 @@ function glattt_register_menus() {
         'glattt-services',
         'glattt_services_page'
     );
+
+    // 5) Buchungs-Übersicht
+    add_submenu_page(
+        'glattt-booking',
+        'Buchungs-Übersicht',
+        'Buchungs-Übersicht',
+        'manage_options',
+        'glattt-bookings-overview',
+        'glattt_bookings_overview_page'
+    );
 }

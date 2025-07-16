@@ -28,6 +28,11 @@
     margin-right: 2em;
 }
 
+/* Abstand zwischen den Reminder-Variant Labels */
+#reminder_fields > label {
+    margin-right: 3em !important;
+}
+
 /* Inline-Layout für 'Fester Zeitpunkt' */
 #trigger_row #admin_fields {
     display: flex;

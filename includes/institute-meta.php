@@ -19,6 +19,8 @@ function glattt_institute_details_page() {
             'branch_id'     => $branch,
             'custom_name'   => sanitize_text_field( $_POST['custom_name'] ),
             'email'         => sanitize_email(      $_POST['email'] ),
+            'phone'         => sanitize_text_field( $_POST['phone'] ),
+            'whatsapp'      => sanitize_text_field( $_POST['whatsapp'] ),
             'image_id'      => intval(              $_POST['image_id'] ),
             'open_mon_from' => $_POST['open_mon_from'],
             'open_mon_to'   => $_POST['open_mon_to'],
@@ -155,6 +157,17 @@ function glattt_institute_details_page() {
     echo '<h2 style="margin-top:24px;">E-Mail-Adresse</h2>';
     echo '<p>';
     echo '<input type="email" name="email" value="' . esc_attr( $row['email'] ?? '' ) . '" class="regular-text" style="width:300px;">';
+    echo '</p>';
+
+    // Telefonnummer
+    echo '<h2 style="margin-top:24px;">Telefonnummer</h2>';
+    echo '<p>';
+    echo '<input type="tel" name="phone" value="' . esc_attr( $row['phone'] ?? '' ) . '" class="regular-text" style="width:300px;">';
+    echo '</p>';
+    // WhatsApp-Nummer
+    echo '<h2 style="margin-top:24px;">WhatsApp-Nummer</h2>';
+    echo '<p>';
+    echo '<input type="tel" name="whatsapp" value="' . esc_attr( $row['whatsapp'] ?? '' ) . '" class="regular-text" style="width:300px;">';
     echo '</p>';
 
     // Speichern

@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dein Weg zur dauerhaften Haarfreiheit beginnt jetzt</title>
+</head>
+<body style="margin:0; padding:0; background-color:#f4f4f4; font-family:Arial,sans-serif; color:#333; ">
+  <table width="100%" cellpadding="0" cellspacing="0" role="presentation">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" role="presentation"
+               style="background-color:#ffffff; margin:20px 0; border-radius:8px; overflow:hidden; border:#e1b520 1px solid">
+          
+          <!-- Header mit Institut-Name -->
+          <tr>
+             <td style="text-align:center;padding:20px;"><a href="https://www.glattt.com">
+      <img src="https://www.glattt.com/docs/uploads/2025/01/glattt_Logo_complete_gold.png" alt="glattt Logo" style="max-height:60px;width:auto;"></a>
+             </td>
+          </tr>
+
+          <!-- Hero-Bild des Standorts -->
+          <tr>
+            <td style="padding:0;">
+              <img src="{INSTITUTE_IMAGE_URL}"
+                   alt="{INSTITUTE_NAME}"
+                   width="600"
+                   style="display:block; width:100%; max-height:150px; object-fit:cover; object-position:center center;">
+            </td>
+          </tr>
+
+          <!-- Begrüßung & Einleitung -->
+          <tr>
+            <td style="padding:30px;">
+              <p style="font-size:16px; margin:0 0 20px;">
+                Hi <strong>{CUSTOMER_FIRSTNAME}</strong>,
+              </p>
+              <p style="font-size:16px; margin:0 0 20px;">
+                super, dass Du Deinen Beratungstermin zur dauerhaften Haarentfernung bei glattt gebucht hast!
+              </p>
+
+              <!-- Termin-Details -->
+              <table cellpadding="0" cellspacing="0" role="presentation"
+                     style="width:100%; border-collapse:collapse; margin:20px 0;">
+                <tr>
+                  <td style="padding:10px; background:#f9f9f9; border:1px solid #eee; font-weight:bold; width:40%;">Datum:</td>
+                  <td style="padding:10px; background:#f9f9f9; border:1px solid #eee;">{APPOINTMENT_DATE}</td>
+                </tr>
+                <tr>
+                  <td style="padding:10px; border:1px solid #eee; font-weight:bold;">Uhrzeit:</td>
+                  <td style="padding:10px; border:1px solid #eee;">{APPOINTMENT_TIME_START} – {APPOINTMENT_TIME_END}</td>
+                </tr>
+                <tr>
+                  <td style="padding:10px; background:#f9f9f9; border:1px solid #eee; font-weight:bold;">Institut:</td>
+                  <td style="padding:10px; background:#f9f9f9; border:1px solid #eee;">{INSTITUTE_NAME}</td>
+                </tr>
+                <tr>
+                  <td style="padding:10px; border:1px solid #eee; font-weight:bold;">Adresse:</td>
+                  <td style="padding:10px; border:1px solid #eee;">{INSTITUTE_ADDRESS}</td>
+                </tr>
+
+              </table>
+
+              <!-- Links zu Infos & Preisen -->
+              <p style="font-size:16px; margin:0 0 20px;">
+                Für Deine Vorbereitung schau Dir bitte unsere 
+                <a href="https://www.glattt.com/behandlung/" style="color:#e7b600; text-decoration:none;">
+                  Behandlungshinweise
+                </a> an
+                und informiere Dich gerne über 
+                <a href="https://www.glattt.com/preise/" style="color:#e7b600; text-decoration:none;">
+                  unsere Preise</a>.
+              </p>
+
+              <p style="font-size:16px; margin:0 0 30px;">
+                Wenn Du Fragen hast oder Deinen Termin ändern möchtest, melde Dich jederzeit per E-Mail unter 
+                <a href="mailto:{INSTITUTE_EMAIL}" style="color:#e7b600; text-decoration:none;">
+                  {INSTITUTE_EMAIL}</a>, ruf uns an unter <a href="tel:{INSTITUTE_PHONE}" style="color:#e7b600; text-decoration:none;">
+                  {INSTITUTE_PHONE}</a> oder schreib uns eine <a href="https://wa.me/{INSTITUTE_WHATSAPP}" style="color:#e7b600; text-decoration:none;">
+                  WhatsApp</a>.
+              </p>
+
+              <p style="font-size:16px; margin:0;">
+                Wir freuen uns auf Dich!<br>
+                Dein Team von {INSTITUTE_NAME}
+              </p>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="background-color:#f4f4f4; padding:20px; text-align:center; font-size:12px; color:#777;">
+              <p style="margin:0;">
+                {INSTITUTE_NAME} &bull; {INSTITUTE_ADDRESS} &bull; 
+                <a href="mailto:{INSTITUTE_EMAIL}" style="color:#777; text-decoration:none;">
+                  {INSTITUTE_EMAIL}
+                </a>
+              </p>
+              <p style="margin:5px 0 0;">
+                © <?php echo date('Y'); ?> Labrado Schlüter GmbH. Alle Rechte vorbehalten.
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
