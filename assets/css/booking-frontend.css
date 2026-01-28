@@ -310,17 +310,157 @@
 }
 
 /* STEP-2: Formular-Einstellungen */
-.step-2 form label {
-  font-size: 1rem;    /* kleinere Label-Schrift */
-  margin-bottom: 1.5rem;  /* mehr Abstand unter jedem Feld */
+/* Mit !important um Theme-Styles zu überschreiben */
+
+/* Floating Label Container */
+#glattt-booking-widget .step-2 .form-field {
+  position: relative !important;
+  margin-bottom: 1.25rem !important;
+  background: transparent !important;
+}
+
+#glattt-booking-widget .step-2 .form-field input,
+#glattt-booking-widget .step-2 .form-field input[type="text"],
+#glattt-booking-widget .step-2 .form-field input[type="email"],
+#glattt-booking-widget .step-2 .form-field input[type="tel"] {
+  width: 100% !important;
+  height: 3.5rem !important;
+  padding: 0.5rem 1rem 0 1rem !important;
+  font-size: 1rem !important;
+  border: 2px solid #ccc !important;
+  border-radius: 0.75rem !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  outline: none !important;
+  box-shadow: none !important;
+  -webkit-box-shadow: none !important;
+  transition: border-color 0.2s ease !important;
+  box-sizing: border-box !important;
+  margin: 0 !important;
+}
+
+#glattt-booking-widget .step-2 .form-field input:focus,
+#glattt-booking-widget .step-2 .form-field input[type="text"]:focus,
+#glattt-booking-widget .step-2 .form-field input[type="email"]:focus,
+#glattt-booking-widget .step-2 .form-field input[type="tel"]:focus {
+  border-color: #E1B520 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+#glattt-booking-widget .step-2 .form-field input::placeholder {
+  color: transparent !important;
+}
+
+#glattt-booking-widget .step-2 .form-field label {
+  position: absolute !important;
+  left: 0.75rem !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  font-size: 1rem !important;
+  color: #999 !important;
+  pointer-events: none !important;
+  transition: all 0.15s ease !important;
+  background: #fff !important;
+  padding: 0 0.25rem !important;
+  margin: 0 !important;
+  line-height: 1 !important;
   font-weight: normal !important;
 }
 
-.step-2 form input,
-.step-2 form textarea {
-  font-size: 1rem !important;        /* größerer Input-Text */
-  padding: 0.4rem 0.6rem !important;  /* kompakteres Innen-Padding */
-  margin-bottom: 1rem !important;
+/* Label nach oben auf den Rand, wenn Input fokussiert oder ausgefüllt */
+#glattt-booking-widget .step-2 .form-field input:focus + label,
+#glattt-booking-widget .step-2 .form-field input:not(:placeholder-shown) + label {
+  top: 0 !important;
+  transform: translateY(-50%) !important;
+  font-size: 0.75rem !important;
+  color: #E1B520 !important;
+}
+
+/* Checkbox Styling */
+#glattt-booking-widget .step-2 .form-checkbox {
+  display: flex !important;
+  align-items: flex-start !important;
+  gap: 0.75rem !important;
+  margin-bottom: 1.5rem !important;
+  background: transparent !important;
+}
+
+#glattt-booking-widget .step-2 .form-checkbox input[type="checkbox"] {
+  width: 1.25rem !important;
+  height: 1.25rem !important;
+  margin-top: 0.15rem !important;
+  accent-color: #E1B520 !important;
+  flex-shrink: 0 !important;
+}
+
+#glattt-booking-widget .step-2 .form-checkbox label {
+  font-size: 0.9rem !important;
+  color: #333 !important;
+  cursor: pointer !important;
+  line-height: 1.4 !important;
+  position: static !important;
+  transform: none !important;
+  background: transparent !important;
+}
+
+#glattt-booking-widget .step-2 .form-checkbox label a {
+  color: #E1B520 !important;
+  text-decoration: underline !important;
+}
+
+/* Jetzt buchen Button - modern & volle Breite */
+#glattt-booking-widget .step-2 button.button-primary,
+#glattt-booking-widget .step-2 button[type="submit"] {
+  width: 100% !important;
+  padding: 1rem 2rem !important;
+  font-size: 1.25rem !important;
+  font-family: Dosis, sans-serif !important;
+  font-weight: 600 !important;
+  background: #E1B520 !important;
+  background-color: #E1B520 !important;
+  color: #fff !important;
+  border: none !important;
+  border-radius: 0.75rem !important;
+  cursor: pointer !important;
+  box-shadow: none !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  margin-top: 0.5rem !important;
+  position: relative !important;
+  overflow: hidden !important;
+  z-index: 1 !important;
+  transition: transform 0.1s ease !important;
+}
+
+/* Gradient Sweep Effekt */
+#glattt-booking-widget .step-2 button.button-primary::before,
+#glattt-booking-widget .step-2 button[type="submit"]::before {
+  content: '' !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: -100% !important;
+  width: 100% !important;
+  height: 100% !important;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent) !important;
+  transition: left 0.5s ease !important;
+  z-index: -1 !important;
+}
+
+#glattt-booking-widget .step-2 button.button-primary:hover::before,
+#glattt-booking-widget .step-2 button[type="submit"]:hover::before {
+  left: 100% !important;
+}
+
+#glattt-booking-widget .step-2 button.button-primary:hover,
+#glattt-booking-widget .step-2 button[type="submit"]:hover {
+  background: #c39a18 !important;
+  background-color: #c39a18 !important;
+}
+
+#glattt-booking-widget .step-2 button.button-primary:active,
+#glattt-booking-widget .step-2 button[type="submit"]:active {
+  transform: scale(0.98) !important;
 }
 
 .initial-overlay {

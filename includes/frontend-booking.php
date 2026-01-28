@@ -101,13 +101,34 @@ function glattt_render_booking_shortcode( $atts ) {
             <input type="hidden" name="end" />
             <input type="hidden" name="staff" />
 
-            <label>Vorname*<br><input type="text" name="firstname" required /></label>
-            <label>Nachname*<br><input type="text" name="lastname" required /></label>
-            <label>E-Mail-Adresse*<br><input type="email" name="email" required /></label>
-            <label>Handy*<br><input type="tel" name="phone" minlength="6" required /></label>
-            <label>Welche Körperzonen willst Du behandeln lassen?*<br><input type="text" name="message" required /></label>
-            <label>Coupon-Code<br><input type="text" name="coupon" placeholder="Optional" /></label>
-            <label></label><input type="checkbox" name="gdpr" required /> Ich akzeptiere die <a target="_blank" rel="noopener noreferrer" href="/datenschutz">Datenschutzbedingungen</a>.</label></br>
+            <div class="form-field">
+              <input type="text" name="firstname" id="firstname" placeholder=" " required />
+              <label for="firstname">Vorname*</label>
+            </div>
+            <div class="form-field">
+              <input type="text" name="lastname" id="lastname" placeholder=" " required />
+              <label for="lastname">Nachname*</label>
+            </div>
+            <div class="form-field">
+              <input type="email" name="email" id="email" placeholder=" " required />
+              <label for="email">E-Mail-Adresse*</label>
+            </div>
+            <div class="form-field">
+              <input type="tel" name="phone" id="phone" placeholder=" " minlength="6" required />
+              <label for="phone">Handy*</label>
+            </div>
+            <div class="form-field">
+              <input type="text" name="message" id="message" placeholder=" " required />
+              <label for="message">Welche Körperzonen willst Du behandeln lassen?*</label>
+            </div>
+            <div class="form-field">
+              <input type="text" name="coupon" id="coupon" placeholder=" " />
+              <label for="coupon">Coupon-Code (optional)</label>
+            </div>
+            <div class="form-checkbox">
+              <input type="checkbox" name="gdpr" id="gdpr" required />
+              <label for="gdpr">Ich akzeptiere die <a target="_blank" rel="noopener noreferrer" href="/datenschutz">Datenschutzbedingungen</a>.</label>
+            </div>
             <button type="submit" class="button button-primary">Jetzt buchen</button>
           </form>
         </div>

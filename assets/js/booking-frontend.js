@@ -58,6 +58,7 @@ $('#glattt-start-booking').on('click', function() {
         $('#glattt-booking-widget').css({ position: 'relative', overflow: 'hidden' });
         setCurrentWeek();
         earliestWeek = weekStart;
+        initFloatingLabels();
         fetchBranches();
         bindEvents();
     }
@@ -428,6 +429,38 @@ $('#glattt-start-booking').on('click', function() {
 
     function showSpinner(){ $('#glattt-booking-widget').addClass('loading'); }
     function hideSpinner(){ $('#glattt-booking-widget').removeClass('loading'); }
+    
+    /**
+     * Floating Labels: Erkennt ob Felder bereits gefüllt sind (z.B. durch Autofill)
+     */
+    function initFloatingLabels() {
+        // Event-Listener für Input-Änderungen
+        $(document).on('input change', '.form-field input', function() {
+            updateFloatingLabel($(this));
+        });
+        
+        // Autofill-Erkennung: Prüfe nach kurzer Verzögerung
+        setTimeout(() => {
+            $('.form-field input').each(function() {
+                updateFloatingLabel($(this));
+            });
+        }, 100);
+        
+        // Nochmal nach längerer Zeit (für langsames Autofill)
+        setTimeout(() => {
+            $('.form-field input').each(function() {
+                updateFloatingLabel($(this));
+            });
+        }, 1000);
+    }
+    
+    function updateFloatingLabel($input) {
+        if ($input.val() && $input.val().length > 0) {
+            $input.addClass('has-value');
+        } else {
+            $input.removeClass('has-value');
+        }
+    }
 
     init();
 });
