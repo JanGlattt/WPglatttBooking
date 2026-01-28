@@ -44,6 +44,17 @@ function glattt_options_page() {
     echo '<div class="wrap"><h1>glattt Bookings Einstellungen</h1><form method="post" action="options.php">';
     settings_fields( 'glattt-booking' );
     do_settings_sections( 'glattt-booking' );
+    echo '<h2>Shortcodes</h2>';
+    echo '<div class="postbox">';
+    echo '  <div class="inside">';
+    echo '    <p>Verwende den folgenden Shortcode, um das Buchungs-Widget einzubinden:</p>';
+    echo '    <textarea class="large-text code" rows="1" readonly>[glattt_booking]</textarea>';
+    echo '    <p>Um einen bestimmten Standort vorauszuwählen, gib die Branch-ID an:</p>';
+    echo '    <textarea class="large-text code" rows="1" readonly>[glattt_booking branch-id="BRANCH_ID"]</textarea>';
+    echo '    <p>Alternativ kannst du die Branch-ID per URL-Parameter setzen:</p>';
+    echo '    <textarea class="large-text code" rows="1" readonly">?id=BRANCH_ID</textarea>';
+    echo '  </div>';
+    echo '</div>';
     echo '<div id="glattt-settings-form">';
     submit_button();
     echo '</div>';

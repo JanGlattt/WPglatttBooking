@@ -192,14 +192,14 @@
   padding-bottom: 0.5rem;
 }
 
-/* Fixe Spaltenbreite */
+/* Fixe Spaltenbreite - 6 Tage (Montag bis Samstag) */
 .weekdays-row,
 .block-grid {
   display: grid;
   grid-auto-flow: column;
   grid-auto-columns: 120px; /* feste Breite pro Tag */
   gap: 0.5rem;
-  min-width: calc(120px * 6 + 0.5rem * 5);
+  min-width: calc(120px * 6 + 0.5rem * 5); /* 6 Tage + 5 Gaps */
 }
 .weekdays-row {
   margin-bottom: 1rem;
@@ -321,4 +321,26 @@
   font-size: 1rem !important;        /* größerer Input-Text */
   padding: 0.4rem 0.6rem !important;  /* kompakteres Innen-Padding */
   margin-bottom: 1rem !important;
+}
+
+.initial-overlay {
+  position:absolute;
+  top:0;
+  left:0;
+  right:0;
+  bottom:0;
+  background:rgba(0,0,0,0.5);
+  display:flex;
+  align-items:flex-start;
+  padding-top: 50px;
+  justify-content:center;
+  z-index:1000;
+  backdrop-filter: blur(10px);
+}
+
+.button-primary {
+  font-size: 24px !important;
+  font-family: Dosis;
+  border: none;
+  box-shadow: 5px 5px 5px #00000040 !important;
 }

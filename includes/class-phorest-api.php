@@ -192,6 +192,110 @@ class GLATTT_Phorrest_API {
     }
 
     /**
+     * Normalisiert eine deutsche Telefonnummer ins Format 491234567890
+     * @param string $phone Telefonnummer in beliebigem Format
+     * @return string Normalisierte Telefonnummer
+     */
+    private function normalize_german_phone( $phone ) {
+        // Alle Nicht-Ziffern entfernen (außer +)
+        $phone = preg_replace( '/[^0-9+]/', '', $phone );
+        
+        // Entferne führendes + falls vorhanden
+        $phone = ltrim( $phone, '+' );
+        
+        // Fall 1: Beginnt mit 0049 -> durch 49 ersetzen
+        if ( strpos( $phone, '0049' ) === 0 ) {
+            $phone = '49' . substr( $phone, 4 );
+        }
+        // Fall 2: Beginnt mit 49 -> okay
+        elseif ( strpos( $phone, '49' ) === 0 ) {
+            // Nichts tun, ist schon richtig
+        }
+        // Fall 3: Beginnt mit 0 -> 0 entfernen und 49 voranstellen
+        elseif ( strpos( $phone, '0' ) === 0 ) {
+            $phone = '49' . substr( $phone, 1 );
+        }
+        // Fall 4: Keine Ländervorwahl -> 49 voranstellen
+        else {
+            $phone = '49' . $phone;
+        }
+        
+        return $phone;
+    }
+
+    /**
+     * Sucht einen Kunden per Telefonnummer (mobile)
+     * @param string $phone Telefonnummer
+     * @return array|WP_Error Array mit clientId wenn gefunden, leeres Array wenn nicht gefunden
+     */
+    public function search_client_by_phone( $phone ) {
+        if ( empty( $this->user ) || empty( $this->pass ) || empty( $this->business_id ) ) {
+            return new WP_Error( 'missing_credentials', 'API Credentials fehlen.' );
+        }
+        // Telefonnummer ins deutsche Format normalisieren
+        $normalized_phone = $this->normalize_german_phone( $phone );
+        
+        // Debug-Log
+        error_log( "🔍 Phorest Client-Suche - Original: {$phone}, Normalisiert: {$normalized_phone}" );
+        
+        // Phorest Client Search API - Parameter heißt "phone" nicht "mobile"!
+        $url = sprintf(
+            'https://api-gateway-eu.phorest.com/third-party-api-server/api/business/%s/client?phone=%s',
+            esc_attr( $this->business_id ),
+            urlencode( $normalized_phone )
+        );
+        
+        error_log( "🔍 API-URL: {$url}" );
+        
+        $resp = wp_remote_get( $url, [
+            'headers' => [
+                'Authorization' => 'Basic ' . base64_encode( "{$this->user}:{$this->pass}" ),
+                'Accept'        => 'application/json'
+            ],
+            'timeout' => 20
+        ]);
+        if ( is_wp_error( $resp ) ) {
+            return $resp;
+        }
+        $body = wp_remote_retrieve_body( $resp );
+        $this->last_response_body = $body;
+        $code = wp_remote_retrieve_response_code( $resp );
+        
+        error_log( "🔍 API Response Code: {$code}" );
+        error_log( "🔍 API Response Body: " . substr( $body, 0, 500 ) );
+        
+        if ( 200 !== $code ) {
+            return new WP_Error( 'api_error', "HTTP $code: " . wp_remote_retrieve_response_message( $resp ) );
+        }
+        $data = json_decode( $body, true );
+        if ( null === $data ) {
+            return new WP_Error( 'json_error', "Ungültige JSON: $body" );
+        }
+        // Wenn Kunden gefunden wurden
+        if ( isset( $data['_embedded']['clients'] ) && ! empty( $data['_embedded']['clients'] ) ) {
+            error_log( "🔍 Anzahl gefundener Kunden: " . count( $data['_embedded']['clients'] ) );
+            
+            // Die API könnte mehrere Ergebnisse zurückgeben - prüfe auf exakte Übereinstimmung
+            foreach ( $data['_embedded']['clients'] as $client ) {
+                // Normalisiere auch die gefundene Telefonnummer zum Vergleich
+                $client_phone = isset( $client['mobile'] ) ? $this->normalize_german_phone( $client['mobile'] ) : '';
+                error_log( "🔍 Vergleich - Gesucht: {$normalized_phone}, Gefunden: {$client_phone}, ClientId: " . ( $client['clientId'] ?? 'N/A' ) );
+                
+                if ( $client_phone === $normalized_phone ) {
+                    error_log( "✅ Exakte Übereinstimmung gefunden! ClientId: " . $client['clientId'] );
+                    return $client; // Exakte Übereinstimmung gefunden!
+                }
+            }
+            // Falls keine exakte Übereinstimmung, nehme ersten Treffer
+            error_log( "⚠️ Keine exakte Übereinstimmung - verwende ersten Treffer" );
+            return $data['_embedded']['clients'][0];
+        }
+        // Kein Kunde gefunden
+        error_log( "❌ Kein Kunde gefunden für: {$normalized_phone}" );
+        return [];
+    }
+
+    /**
      * Legt eine Buchung an
      * @param array $data (branch, service, start, end, firstname, lastname, email, phone, message)
      * @return array ['ok'=>bool, 'message'=>mixed]

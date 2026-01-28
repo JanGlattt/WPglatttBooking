@@ -2,7 +2,7 @@
 /**
  * Plugin Name:     glattt Bookings
  * Description:     Phorest-Buchungs-API als WordPress-Plugin.
- * Version:         0.4.0
+ * Version:         0.5.1
  * Author:          Jan für glattt
  * Text Domain:     glattt-booking
  */

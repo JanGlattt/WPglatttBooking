@@ -1,6 +1,7 @@
 <?php
 if ( ! defined( 'ABSPATH' ) ) exit;
 
+require_once WPGLATTT_PATH . 'includes/class-phorest-api.php';
 require_once WPGLATTT_PATH . 'includes/email-sender.php';
 
 /**
@@ -38,7 +39,12 @@ function glattt_render_booking_shortcode( $atts ) {
 
     ob_start(); ?>
     <div id="glattt-booking-widget"<?php if ( $default_branch ): ?> data-default-branch="<?php echo esc_attr( $default_branch ); ?>"<?php endif; ?>>
-      <div class="steps-wrapper">
+      <div class="initial-overlay">
+  <button id="glattt-start-booking" class="button button-primary start-booking">
+    Jetzt Deinen Termin buchen
+  </button>
+</div>
+        <div class="steps-wrapper">
         <!-- STEP 1 -->
         <div class="step-1">
           <div class="institute-selector">
@@ -98,9 +104,10 @@ function glattt_render_booking_shortcode( $atts ) {
             <label>Vorname*<br><input type="text" name="firstname" required /></label>
             <label>Nachname*<br><input type="text" name="lastname" required /></label>
             <label>E-Mail-Adresse*<br><input type="email" name="email" required /></label>
-            <label>Handy<br><input type="tel" name="phone" minlength="6" /></label>
+            <label>Handy*<br><input type="tel" name="phone" minlength="6" required /></label>
             <label>Welche Körperzonen willst Du behandeln lassen?*<br><input type="text" name="message" required /></label>
-            <label><input type="checkbox" name="gdpr" required /> Ich akzeptiere die <a target="_blank" rel="noopener noreferrer" href="/datenschutz">Datenschutzbedingungen</a>.</label></br>
+            <label>Coupon-Code<br><input type="text" name="coupon" placeholder="Optional" /></label>
+            <label></label><input type="checkbox" name="gdpr" required /> Ich akzeptiere die <a target="_blank" rel="noopener noreferrer" href="/datenschutz">Datenschutzbedingungen</a>.</label></br>
             <button type="submit" class="button button-primary">Jetzt buchen</button>
           </form>
         </div>
@@ -186,12 +193,82 @@ function glattt_get_availability() {
     $service = sanitize_text_field( $_POST['service'] ?? '' );
     $monday  = intval( $_POST['monday'] ?? 0 );
     $sunday  = intval( $_POST['sunday'] ?? 0 );
-    $api     = new GLATTT_Phorrest_API();
-    $slots   = $api->get_availability( $branch, $service, $monday, $sunday );
-    if ( is_wp_error( $slots ) ) {
-        wp_send_json_error( $slots->get_error_message() );
+
+    // Direkt Abfrage wie im alten Tool, um identische Slots zu erhalten
+    $business_id  = get_option( 'glattt_business_id' );
+    $user         = get_option( 'glattt_username' );
+    $pass         = get_option( 'glattt_password' );
+    $auth_header  = 'Basic ' . base64_encode( "{$user}:{$pass}" );
+
+    $availability_response = wp_remote_post(
+        "https://platform.phorest.com/third-party-api-server/api/business/{$business_id}/branch/{$branch}/appointments/availability",
+        [
+            'headers' => [
+                'Authorization' => $auth_header,
+                'Content-Type'  => 'application/json',
+                'Accept'        => 'application/json',
+            ],
+            'body'    => wp_json_encode( [
+                'clientServiceSelections' => [
+                    [
+                        'serviceSelections' => [
+                            [ 'serviceId' => $service ]
+                        ]
+                    ]
+                ],
+                'startTime'             => $monday,
+                'endTime'               => $sunday,
+                'isOnlineAvailability'  => true,
+            ] ),
+            'timeout' => 15,
+        ]
+    );
+
+    // Fehler prüfen
+    if ( is_wp_error( $availability_response ) ) {
+        wp_send_json_error( $availability_response->get_error_message() );
     }
-    wp_send_json_success( $slots );
+
+    $availability_body = wp_remote_retrieve_body( $availability_response );
+    $availability_data = json_decode( $availability_body, true );
+    if ( empty( $availability_data['data'] ) ) {
+        wp_send_json_error( 'Keine Daten von Phorest erhalten: ' . $availability_body );
+    }
+
+    // Nur das 'data'-Array zurückgeben
+    wp_send_json_success( $availability_data['data'] );
+}
+
+/**
+ * Normalisiert eine deutsche Telefonnummer ins Format 491234567890
+ * @param string $phone Telefonnummer in beliebigem Format
+ * @return string Normalisierte Telefonnummer
+ */
+function glattt_normalize_german_phone( $phone ) {
+    // Alle Nicht-Ziffern entfernen (außer +)
+    $phone = preg_replace( '/[^0-9+]/', '', $phone );
+    
+    // Entferne führendes + falls vorhanden
+    $phone = ltrim( $phone, '+' );
+    
+    // Fall 1: Beginnt mit 0049 -> durch 49 ersetzen
+    if ( strpos( $phone, '0049' ) === 0 ) {
+        $phone = '49' . substr( $phone, 4 );
+    }
+    // Fall 2: Beginnt mit 49 -> okay
+    elseif ( strpos( $phone, '49' ) === 0 ) {
+        // Nichts tun, ist schon richtig
+    }
+    // Fall 3: Beginnt mit 0 -> 0 entfernen und 49 voranstellen
+    elseif ( strpos( $phone, '0' ) === 0 ) {
+        $phone = '49' . substr( $phone, 1 );
+    }
+    // Fall 4: Keine Ländervorwahl -> 49 voranstellen
+    else {
+        $phone = '49' . $phone;
+    }
+    
+    return $phone;
 }
 
 /**
@@ -218,46 +295,81 @@ function glattt_book_appointment() {
     $email     = $input['email'];
     $phone     = $input['phone'];
     $message   = $input['message'];
+    $coupon    = $input['coupon'] ?? '';
     $staffId   = $input['staff'] ?? '';
+
+    // Telefonnummer normalisieren (ins Format 491234567890)
+    $normalized_phone = glattt_normalize_german_phone( $phone );
+    
+    error_log( "📞 Buchung - Original Telefon: {$phone}, Normalisiert: {$normalized_phone}" );
 
     // 3) Auth-Header – hier die korrekten Optionen verwenden!
     $user        = get_option( 'glattt_username' );
     $pass        = get_option( 'glattt_password' );
     $auth_header = 'Basic ' . base64_encode( "{$user}:{$pass}" );
 
-    // --- A) Kunde anlegen (200 oder 201 OK) ---
-    $client_payload = [
-        'firstName' => $firstname,
-        'lastName'  => $lastname,
-        'email'     => $email,
-        'mobile'    => $phone,
-    ];
-    $client_resp = wp_remote_post(
-        "https://api-gateway-eu.phorest.com/third-party-api-server/api/business/{$business_id}/client",
-        [
-            'headers' => [
-                'Authorization' => $auth_header,
-                'Content-Type'  => 'application/json',
-                'Accept'        => 'application/json',
-            ],
-            'body'    => wp_json_encode( $client_payload ),
-            'timeout' => 15,
-        ]
-    );
-    $client_code = wp_remote_retrieve_response_code( $client_resp );
-    if ( is_wp_error( $client_resp ) || ! in_array( $client_code, [200,201], true ) ) {
-        $err = is_wp_error( $client_resp )
-             ? $client_resp->get_error_message()
-             : wp_remote_retrieve_body( $client_resp );
-        wp_send_json_error([ 'message' => "Konnte Client nicht anlegen (HTTP {$client_code}): {$err}" ]);
+    // --- A) Zuerst Kunde per Telefonnummer suchen ---
+    $api_instance = new GLATTT_Phorrest_API();
+    $existing_client = $api_instance->search_client_by_phone( $normalized_phone );
+    $client_id = '';
+    
+    if ( is_wp_error( $existing_client ) ) {
+        // Fehler bei der Suche - trotzdem versuchen, neuen Kunden anzulegen
+        error_log( "⚠️ Fehler bei Client-Suche: " . $existing_client->get_error_message() );
+        $existing_client = [];
     }
-    $client_data = json_decode( wp_remote_retrieve_body( $client_resp ), true );
-    $client_id   = $client_data['clientId'] ?? '';
+    
+    if ( ! empty( $existing_client ) && isset( $existing_client['clientId'] ) ) {
+        // Kunde existiert bereits - ClientId verwenden
+        $client_id = $existing_client['clientId'];
+        error_log( "✅ Bestehender Kunde gefunden! ClientId: {$client_id}" );
+    } else {
+        // Kunde existiert noch nicht - neu anlegen mit normalisierter Telefonnummer
+        error_log( "🆕 Neuen Kunden anlegen mit Telefon: {$normalized_phone}" );
+        $client_payload = [
+            'firstName' => $firstname,
+            'lastName'  => $lastname,
+            'email'     => $email,
+            'mobile'    => $normalized_phone, // Normalisierte Nummer verwenden!
+            'smsMarketingConsent'   => true,
+            'emailMarketingConsent' => true,
+            'smsReminderConsent'    => true,
+            'emailReminderConsent'  => true,
+        ];
+        $client_resp = wp_remote_post(
+            "https://api-gateway-eu.phorest.com/third-party-api-server/api/business/{$business_id}/client",
+            [
+                'headers' => [
+                    'Authorization' => $auth_header,
+                    'Content-Type'  => 'application/json',
+                    'Accept'        => 'application/json',
+                ],
+                'body'    => wp_json_encode( $client_payload ),
+                'timeout' => 15,
+            ]
+        );
+        $client_code = wp_remote_retrieve_response_code( $client_resp );
+        if ( is_wp_error( $client_resp ) || ! in_array( $client_code, [200,201], true ) ) {
+            $err = is_wp_error( $client_resp )
+                 ? $client_resp->get_error_message()
+                 : wp_remote_retrieve_body( $client_resp );
+            wp_send_json_error([ 'message' => "Konnte Client nicht anlegen (HTTP {$client_code}): {$err}" ]);
+        }
+        $client_data = json_decode( wp_remote_retrieve_body( $client_resp ), true );
+        $client_id   = $client_data['clientId'] ?? '';
+    }
+    
     if ( empty( $client_id ) ) {
         wp_send_json_error([ 'message' => 'Client-ID fehlt im API-Response.' ]);
     }
 
     // --- B) Termin buchen (200 oder 201 OK) ---
+    // Notiz zusammenbauen: Körperzonen + optional Coupon-Code
+    $booking_note = "Körperzonen: {$message}";
+    if ( ! empty( $coupon ) ) {
+        $booking_note .= " | Coupon-Code: {$coupon}";
+    }
+    
     $booking_payload = [
         'bookingStatus' => 'ACTIVE',
         'clientAppointmentSchedules' => [
@@ -274,7 +386,7 @@ function glattt_book_appointment() {
             ],
         ],
         'clientId' => $client_id,
-        'note'     => $message,
+        'note'     => $booking_note,
     ];
     $booking_resp = wp_remote_post(
         "https://api-gateway-eu.phorest.com/third-party-api-server/api/business/{$business_id}/branch/{$branchId}/booking",
@@ -398,35 +510,108 @@ $meta_whatsapp = $wpdb->get_var(
 $institute_phone    = $meta_phone    ?: '';
 $institute_whatsapp = $meta_whatsapp ?: '';
 
-    // --- C) E-Mail Versand bei Buchung (nun zentral) ---
+    // --- C) E-Mail Versand bei Buchung (nun zentral mit Standort-Filterung) ---
     if ( class_exists( 'GLATTT_Email_Sender' ) ) {
-        $template_ids = $wpdb->get_col(
+        // Hole alle Templates vom Typ "Buchung" (email_type = 1)
+        $all_templates = $wpdb->get_results(
             $wpdb->prepare(
-                "SELECT id FROM {$wpdb->prefix}glattt_email_templates WHERE email_type = %d",
+                "SELECT id, all_locations, branch_ids, all_services, service_ids 
+                 FROM {$wpdb->prefix}glattt_email_templates 
+                 WHERE email_type = %d",
                 1
-            )
+            ),
+            ARRAY_A
         );
-        foreach ( $template_ids as $tpl_id ) {
-            GLATTT_Email_Sender::send_template(
-                $tpl_id,
-                [
-                    '{CUSTOMER_FIRSTNAME}'     => $firstname,
-                    '{CUSTOMER_LASTNAME}'      => $lastname,
-                    '{CUSTOMER_NAME}'          => "{$firstname} {$lastname}",
-                    '{CUSTOMER_EMAIL}'         => $email,
-                    '{APPOINTMENT_DATE}'       => $start_dt,
-                    '{APPOINTMENT_TIME_START}' => $start_tm,
-                    '{APPOINTMENT_TIME_END}'   => $end_tm,
-                    '{INSTITUTE_NAME}'         => $institute_name,
-                    '{INSTITUTE_EMAIL}'        => $institute_email,
-                    '{INSTITUTE_ADDRESS}'      => $institute_address,
-                    '{INSTITUTE_IMAGE_URL}'    => $institute_image_url,
-                    '{INSTITUTE_PHONE}'        => $institute_phone,
-                    '{INSTITUTE_WHATSAPP}'     => $institute_whatsapp,
-                ]
-            );
+        
+        foreach ( $all_templates as $tpl ) {
+            $tpl_id = $tpl['id'];
+            $send_this_template = false;
+            
+            // 1) Check Standort-Filter
+            if ( intval($tpl['all_locations']) === 1 ) {
+                // Template gilt für alle Standorte
+                $send_this_template = true;
+            } elseif ( ! empty( $tpl['branch_ids'] ) ) {
+                // Template gilt nur für bestimmte Standorte
+                $allowed_branches = array_map('trim', explode(',', $tpl['branch_ids']));
+                if ( in_array( $branchId, $allowed_branches, true ) ) {
+                    $send_this_template = true;
+                }
+            }
+            
+            // 2) Check Service-Filter (wenn Standort passt)
+            if ( $send_this_template ) {
+                if ( intval($tpl['all_services']) === 1 ) {
+                    // Template gilt für alle Services
+                    $send_this_template = true;
+                } elseif ( ! empty( $tpl['service_ids'] ) ) {
+                    // Template gilt nur für bestimmte Services
+                    $service_config = json_decode( $tpl['service_ids'], true );
+                    if ( is_array( $service_config ) ) {
+                        // Check if service is allowed for this branch
+                        if ( isset( $service_config[$branchId] ) ) {
+                            $allowed_services = $service_config[$branchId];
+                            if ( in_array('all', $allowed_services, true) || in_array($serviceId, $allowed_services, true) ) {
+                                $send_this_template = true;
+                            } else {
+                                $send_this_template = false;
+                            }
+                        } else {
+                            // Branch not in service config, don't send
+                            $send_this_template = false;
+                        }
+                    }
+                }
+            }
+            
+            // 3) Template senden, wenn alle Filter passen
+            if ( $send_this_template ) {
+                GLATTT_Email_Sender::send_template(
+                    $tpl_id,
+                    [
+                        '{CUSTOMER_FIRSTNAME}'     => $firstname,
+                        '{CUSTOMER_LASTNAME}'      => $lastname,
+                        '{CUSTOMER_NAME}'          => "{$firstname} {$lastname}",
+                        '{CUSTOMER_EMAIL}'         => $email,
+                        '{APPOINTMENT_DATE}'       => $start_dt,
+                        '{APPOINTMENT_TIME_START}' => $start_tm,
+                        '{APPOINTMENT_TIME_END}'   => $end_tm,
+                        '{INSTITUTE_NAME}'         => $institute_name,
+                        '{INSTITUTE_EMAIL}'        => $institute_email,
+                        '{INSTITUTE_ADDRESS}'      => $institute_address,
+                        '{INSTITUTE_IMAGE_URL}'    => $institute_image_url,
+                        '{INSTITUTE_PHONE}'        => $institute_phone,
+                        '{INSTITUTE_WHATSAPP}'     => $institute_whatsapp,
+                    ]
+                );
+            }
         }
     }
 
     wp_send_json_success([ 'redirect' => site_url( '/danke-buchung' ) ]);
+}
+// Cronjob: Jeden Sonntag den Plugin-Cache löschen
+add_action('init', 'glattt_setup_cache_clear');
+function glattt_setup_cache_clear() {
+    if (! wp_next_scheduled('glattt_clear_cache')) {
+        // nächsten Sonntag um Mitternacht planen
+        $timestamp = strtotime('next sunday 00:00:00');
+        wp_schedule_event($timestamp, 'weekly', 'glattt_clear_cache');
+    }
+}
+
+add_action('glattt_clear_cache', 'glattt_clear_plugin_cache');
+function glattt_clear_plugin_cache() {
+    global $wpdb;
+    // Alle Plugin-Transients löschen
+    $prefix = $wpdb->esc_like('_transient_glattt_');
+    $wpdb->query("
+        DELETE FROM {$wpdb->options}
+        WHERE option_name LIKE '_transient_glattt_%'
+           OR option_name LIKE '_transient_timeout_glattt_%'
+    ");
+    // WordPress Object Cache flushen
+    if ( function_exists('wp_cache_flush') ) {
+        wp_cache_flush();
+    }
 }
