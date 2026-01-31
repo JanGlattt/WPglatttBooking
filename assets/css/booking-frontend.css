@@ -148,8 +148,8 @@
   display: flex;
   align-items: center;
   justify-content: flex-start; /* linken Rand anpegeln */
-  padding-left: 5rem;   /* Platz für .institute-prev */
-  padding-right: 5rem;  /* Platz für .institute-next */
+  padding-left: 2rem;   /* Platz für .institute-prev */
+  padding-right: 2rem;  /* Platz für .institute-next */
   padding-top: 20px;
   padding-bottom: 20px;
 }
@@ -237,6 +237,10 @@
 }
 .block-grid .timeslot:hover {
   background: #c39a18;
+}
+
+.booking-summary {
+  padding-bottom: 1rem;
 }
 
 /* Modal Styles – bleiben unverändert */

@@ -252,11 +252,13 @@ function glattt_get_availability() {
 
     $availability_body = wp_remote_retrieve_body( $availability_response );
     $availability_data = json_decode( $availability_body, true );
-    if ( empty( $availability_data['data'] ) ) {
-        wp_send_json_error( 'Keine Daten von Phorest erhalten: ' . $availability_body );
+    
+    // Prüfe ob die API-Antwort valide ist (data-Key muss existieren, kann aber leer sein)
+    if ( ! isset( $availability_data['data'] ) ) {
+        wp_send_json_error( 'Ungültige API-Antwort von Phorest: ' . $availability_body );
     }
 
-    // Nur das 'data'-Array zurückgeben
+    // Leeres Array ist OK (= keine Slots verfügbar), wird als success zurückgegeben
     wp_send_json_success( $availability_data['data'] );
 }
 

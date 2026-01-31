@@ -237,6 +237,9 @@ $('#glattt-start-booking').on('click', function() {
             autoSkipWeeksCount = 0;
         }
         
+        console.log(`🔍 loadAvailability aufgerufen - isAutoSkip: ${isAutoSkip}, autoSkipWeeksCount: ${autoSkipWeeksCount}`);
+        console.log(`🔍 Anfrage für Woche: ${new Date(weekStart).toLocaleDateString()} - ${new Date(weekEnd).toLocaleDateString()}`);
+        
         $.post(glatttFrontend.ajax_url, {
             action:   'glattt_get_availability',
             nonce:    glatttFrontend.nonce_get,
@@ -246,23 +249,42 @@ $('#glattt-start-booking').on('click', function() {
             sunday:   weekEnd
         }, resp => {
             hideSpinner();
+            console.log('📥 API Response:', resp);
+            console.log('📥 resp.success:', resp.success);
+            console.log('📥 resp.data:', resp.data);
+            console.log('📥 Anzahl Slots:', resp.data ? resp.data.length : 'keine data');
+            
             if (resp.success) {
                 const slots = resp.data;
+                const now = new Date().getTime();
                 
-                // Prüfen ob Slots in dieser Woche verfügbar sind
-                if (slots.length === 0 && autoSkipWeeksCount < maxAutoSkipWeeks) {
-                    // Keine Termine in dieser Woche - automatisch zur nächsten wechseln
+                // Filtere nur zukünftige Slots (mindestens 30 Minuten in der Zukunft)
+                const futureSlots = slots.filter(s => {
+                    const slotTime = new Date(s.startTime).getTime();
+                    return slotTime > (now + 30 * 60 * 1000); // 30 Min Puffer
+                });
+                
+                console.log(`📅 Woche ${new Date(weekStart).toLocaleDateString()}: ${slots.length} Slots total, ${futureSlots.length} in der Zukunft`);
+                
+                // Prüfen ob ZUKÜNFTIGE Slots in dieser Woche verfügbar sind
+                if (futureSlots.length === 0 && autoSkipWeeksCount < maxAutoSkipWeeks) {
+                    // Keine zukünftigen Termine in dieser Woche - automatisch zur nächsten wechseln
                     autoSkipWeeksCount++;
-                    console.log(`⏭️ Keine Termine in dieser Woche, wechsle zu Woche ${autoSkipWeeksCount}/${maxAutoSkipWeeks}`);
+                    console.log(`⏭️ Keine zukünftigen Termine in dieser Woche, wechsle zu Woche ${autoSkipWeeksCount}/${maxAutoSkipWeeks}`);
                     changeWeek(7, true); // true = Auto-Skip
                 } else {
-                    // Slots gefunden oder Max erreicht - anzeigen
+                    // Zukünftige Slots gefunden oder Max erreicht - anzeigen
                     if (autoSkipWeeksCount > 0) {
                         console.log(`✅ Termine gefunden nach ${autoSkipWeeksCount} Woche(n) Vorsprung`);
                     }
-                    renderGridTimeslots(slots);
+                    renderGridTimeslots(futureSlots);
                 }
+            } else {
+                console.log('❌ API Response nicht erfolgreich:', resp);
             }
+        }).fail(function(xhr, status, error) {
+            console.log('❌ AJAX Fehler:', status, error);
+            hideSpinner();
         });
     }
 
