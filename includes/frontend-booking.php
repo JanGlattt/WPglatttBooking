@@ -86,13 +86,25 @@ function glattt_render_booking_shortcode( $atts ) {
             <button type="button" class="institute-next">&gt;</button>
           </div>
           <div class="go-back-link go-back">← Zur Terminauswahl</div>
-          <h3>Deine Buchungsdaten</h3>
 
-          <div class="booking-summary">
-            <p>Datum: <strong><span class="sum-date"></span></strong><br>
-            Uhrzeit: <strong><span class="sum-time"></span></strong><br>
-            Institut: <strong><span class="sum-institute"></span></strong></p>
+          <div class="booking-summary-card">
+            <div class="booking-summary">
+              <span class="summary-item">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.75 2a.75.75 0 0 1 .75.75V4h7V2.75a.75.75 0 0 1 1.5 0V4h.25A2.75 2.75 0 0 1 18 6.75v8.5A2.75 2.75 0 0 1 15.25 18H4.75A2.75 2.75 0 0 1 2 15.25v-8.5A2.75 2.75 0 0 1 4.75 4H5V2.75A.75.75 0 0 1 5.75 2Zm-1 5.5c-.69 0-1.25.56-1.25 1.25v6.5c0 .69.56 1.25 1.25 1.25h10.5c.69 0 1.25-.56 1.25-1.25v-6.5c0-.69-.56-1.25-1.25-1.25H4.75Z" clip-rule="evenodd"/></svg>
+                <strong><span class="sum-date"></span></strong>
+              </span>
+              <span class="summary-item">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm.75-13a.75.75 0 0 0-1.5 0v5c0 .414.336.75.75.75h4a.75.75 0 0 0 0-1.5h-3.25V5Z" clip-rule="evenodd"/></svg>
+                <strong><span class="sum-time"></span></strong>
+              </span>
+              <span class="summary-item">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="m9.69 18.933.003.001C9.89 19.02 10 19 10 19s.11.02.308-.066l.002-.001.006-.003.018-.008a5.741 5.741 0 0 0 .281-.145c.18-.096.422-.232.702-.408.56-.352 1.286-.868 2.01-1.553C14.747 15.46 16 13.26 16 10.5V5.214A2 2 0 0 0 14.758 3.39l-4.272-1.424a2 2 0 0 0-1.272.004L5.227 3.397A2 2 0 0 0 4 5.214V10.5c0 2.76 1.253 4.96 2.673 6.317a13.06 13.06 0 0 0 2.01 1.553 8.122 8.122 0 0 0 .702.408 5.741 5.741 0 0 0 .281.145l.018.008.006.003ZM10 11.25a2.25 2.25 0 1 0 0-4.5 2.25 2.25 0 0 0 0 4.5Zm0 1.5a3.75 3.75 0 0 0-3.56 2.563c.67.542 1.392.983 2.065 1.299.34.16.637.281.875.363A6.588 6.588 0 0 0 10 17c.027 0 .26-.014.62-.125.238-.082.535-.203.875-.363a11.56 11.56 0 0 0 2.065-1.299A3.75 3.75 0 0 0 10 12.75Z" clip-rule="evenodd"/></svg>
+                <strong><span class="sum-institute"></span></strong>
+              </span>
+            </div>
           </div>
+
+          <p class="form-disclaimer">Damit wir Deine Beratung individuell auf Dich abstimmen können, benötigen wir vorab ein paar Angaben von Dir.</p>
 
           <form id="glattt-booking-form">
             <input type="hidden" name="branch" />
@@ -100,6 +112,17 @@ function glattt_render_booking_shortcode( $atts ) {
             <input type="hidden" name="start" />
             <input type="hidden" name="end" />
             <input type="hidden" name="staff" />
+
+            <div class="form-field-group">
+              <label class="group-label">Geschlecht*</label>
+              <div class="gender-switch" id="gender-switch">
+                <button type="button" data-value="FEMALE" class="gender-option">Weiblich</button>
+                <button type="button" data-value="MALE" class="gender-option">Männlich</button>
+                <button type="button" data-value="NON_BINARY" class="gender-option">Non-binär</button>
+                <button type="button" data-value="PREFER_NOT_TO_SAY" class="gender-option">Keine Angabe</button>
+              </div>
+              <input type="hidden" name="gender" id="gender" required />
+            </div>
 
             <div class="form-field">
               <input type="text" name="firstname" id="firstname" placeholder=" " required />
@@ -110,6 +133,10 @@ function glattt_render_booking_shortcode( $atts ) {
               <label for="lastname">Nachname*</label>
             </div>
             <div class="form-field">
+              <input type="date" name="birthday" id="birthday" required max="<?php echo date('Y-m-d'); ?>" />
+              <label for="birthday">Geburtsdatum*</label>
+            </div>
+            <div class="form-field">
               <input type="email" name="email" id="email" placeholder=" " required />
               <label for="email">E-Mail-Adresse*</label>
             </div>
@@ -118,12 +145,12 @@ function glattt_render_booking_shortcode( $atts ) {
               <label for="phone">Handy*</label>
             </div>
             <div class="form-field">
-              <input type="text" name="message" id="message" placeholder=" " required />
-              <label for="message">Welche Körperzonen willst Du behandeln lassen?*</label>
+              <input type="text" name="zip" id="zip" placeholder=" " required pattern="[0-9]{5}" maxlength="5" inputmode="numeric" title="Bitte gib eine gültige 5-stellige Postleitzahl ein" />
+              <label for="zip">Postleitzahl*</label>
             </div>
             <div class="form-field">
-              <input type="text" name="coupon" id="coupon" placeholder=" " />
-              <label for="coupon">Coupon-Code (optional)</label>
+              <input type="text" name="message" id="message" placeholder=" " required />
+              <label for="message">Welche Körperzonen willst Du behandeln lassen?*</label>
             </div>
             <div class="form-checkbox">
               <input type="checkbox" name="gdpr" id="gdpr" required />
@@ -318,7 +345,9 @@ function glattt_book_appointment() {
     $email     = $input['email'];
     $phone     = $input['phone'];
     $message   = $input['message'];
-    $coupon    = $input['coupon'] ?? '';
+    $gender    = $input['gender'] ?? '';
+    $birthday  = $input['birthday'] ?? '';
+    $zip       = $input['zip'] ?? '';
     $staffId   = $input['staff'] ?? '';
 
     // Telefonnummer normalisieren (ins Format 491234567890)
@@ -346,6 +375,33 @@ function glattt_book_appointment() {
         // Kunde existiert bereits - ClientId verwenden
         $client_id = $existing_client['clientId'];
         error_log( "✅ Bestehender Kunde gefunden! ClientId: {$client_id}" );
+
+        // Geschlecht, Geburtsdatum und PLZ aktualisieren (falls neu erfasst)
+        $update_payload = [];
+        if ( ! empty( $gender ) ) {
+            $update_payload['gender'] = $gender;
+        }
+        if ( ! empty( $birthday ) ) {
+            $update_payload['birthDate'] = $birthday;
+        }
+        if ( ! empty( $zip ) ) {
+            $update_payload['address'] = [ 'postalCode' => $zip ];
+        }
+        if ( ! empty( $update_payload ) ) {
+            wp_remote_request(
+                "https://api-gateway-eu.phorest.com/third-party-api-server/api/business/{$business_id}/client/{$client_id}",
+                [
+                    'method'  => 'PATCH',
+                    'headers' => [
+                        'Authorization' => $auth_header,
+                        'Content-Type'  => 'application/json',
+                        'Accept'        => 'application/json',
+                    ],
+                    'body'    => wp_json_encode( $update_payload ),
+                    'timeout' => 10,
+                ]
+            );
+        }
     } else {
         // Kunde existiert noch nicht - neu anlegen mit normalisierter Telefonnummer
         error_log( "🆕 Neuen Kunden anlegen mit Telefon: {$normalized_phone}" );
@@ -353,12 +409,21 @@ function glattt_book_appointment() {
             'firstName' => $firstname,
             'lastName'  => $lastname,
             'email'     => $email,
-            'mobile'    => $normalized_phone, // Normalisierte Nummer verwenden!
+            'mobile'    => $normalized_phone,
             'smsMarketingConsent'   => true,
             'emailMarketingConsent' => true,
             'smsReminderConsent'    => true,
             'emailReminderConsent'  => true,
         ];
+        if ( ! empty( $gender ) ) {
+            $client_payload['gender'] = $gender;
+        }
+        if ( ! empty( $birthday ) ) {
+            $client_payload['birthDate'] = $birthday;
+        }
+        if ( ! empty( $zip ) ) {
+            $client_payload['address'] = [ 'postalCode' => $zip ];
+        }
         $client_resp = wp_remote_post(
             "https://api-gateway-eu.phorest.com/third-party-api-server/api/business/{$business_id}/client",
             [
@@ -387,10 +452,9 @@ function glattt_book_appointment() {
     }
 
     // --- B) Termin buchen (200 oder 201 OK) ---
-    // Notiz zusammenbauen: Körperzonen + optional Coupon-Code
     $booking_note = "Körperzonen: {$message}";
-    if ( ! empty( $coupon ) ) {
-        $booking_note .= " | Coupon-Code: {$coupon}";
+    if ( ! empty( $zip ) ) {
+        $booking_note .= " | PLZ: {$zip}";
     }
     
     $booking_payload = [
@@ -650,7 +714,10 @@ function glattt_send_booking_tracking( $appointment_id, $branch_id, $service_id,
     $api_url   = rtrim( get_option( 'glattt_hub_api_url', '' ), '/' );
     $api_token = get_option( 'glattt_hub_api_token', '' );
 
+    error_log( '[glattt-booking] Tracking gestartet - URL: ' . $api_url . ' | Token: ' . ( empty($api_token) ? 'LEER' : 'vorhanden' ) . ' | AppointmentID: ' . $appointment_id );
+
     if ( empty( $api_url ) || empty( $api_token ) || empty( $appointment_id ) ) {
+        error_log( '[glattt-booking] Tracking abgebrochen - fehlende Daten: URL=' . (empty($api_url)?'LEER':'ok') . ', Token=' . (empty($api_token)?'LEER':'ok') . ', AppID=' . (empty($appointment_id)?'LEER':'ok') );
         return;
     }
 
@@ -683,8 +750,9 @@ function glattt_send_booking_tracking( $appointment_id, $branch_id, $service_id,
         error_log( '[glattt-booking] Tracking API Fehler: ' . $response->get_error_message() );
     } else {
         $code = wp_remote_retrieve_response_code( $response );
+        error_log( '[glattt-booking] Tracking API HTTP ' . $code );
         if ( $code !== 201 ) {
-            error_log( '[glattt-booking] Tracking API HTTP ' . $code . ': ' . wp_remote_retrieve_body( $response ) );
+            error_log( '[glattt-booking] Tracking API Body: ' . wp_remote_retrieve_body( $response ) );
         }
     }
 }

@@ -30,6 +30,9 @@ jQuery(function($){
       return true;
     }
     console.log('🔔 booking-frontend.js geladen');
+
+    // UTM-Persistierung läuft global über campaign-persist.js (auf allen Seiten)
+
     let branches = [], currentIndex = 0,
         weekStart, weekEnd, earliestWeek,
         selectedService = '',
@@ -96,6 +99,12 @@ function collectTrackingData() {
         bookingDuration = Math.round((Date.now() - parseInt(startTime, 10)) / 1000);
     }
 
+    // Kampagnen-Daten: localStorage hat Vorrang (vom Kampagnen-Einstieg),
+    // Fallback auf aktuelle URL-Parameter
+    function getParam(key) {
+        return localStorage.getItem('glattt_' + key) || params.get(key) || null;
+    }
+
     return {
         user_agent: ua,
         browser_name: browserName,
@@ -108,15 +117,15 @@ function collectTrackingData() {
         viewport_width: window.innerWidth || null,
         viewport_height: window.innerHeight || null,
         language: navigator.language || null,
-        referrer: document.referrer || null,
-        landing_page: window.location.href || null,
-        utm_source: params.get('utm_source') || null,
-        utm_medium: params.get('utm_medium') || null,
-        utm_campaign: params.get('utm_campaign') || null,
-        utm_content: params.get('utm_content') || null,
-        utm_term: params.get('utm_term') || null,
-        gclid: params.get('gclid') || null,
-        fbclid: params.get('fbclid') || null,
+        referrer: localStorage.getItem('glattt_referrer') || document.referrer || null,
+        landing_page: localStorage.getItem('glattt_landing_page') || window.location.href || null,
+        utm_source: getParam('utm_source'),
+        utm_medium: getParam('utm_medium'),
+        utm_campaign: getParam('utm_campaign'),
+        utm_content: getParam('utm_content'),
+        utm_term: getParam('utm_term'),
+        gclid: getParam('gclid'),
+        fbclid: getParam('fbclid'),
         booking_duration_seconds: bookingDuration,
         cookie_consent: (typeof window.Borlabs !== 'undefined' && window.Borlabs.Cookie)
             ? 'borlabs' : null
@@ -178,6 +187,19 @@ $('#glattt-start-booking').on('click', function() {
             e.preventDefault();
             bookAppointment();
         });
+
+        // Gender-Switch: Klick auf eine Option
+        $(document).on('click', '.gender-option', function(){
+            $('.gender-option').removeClass('active');
+            $(this).addClass('active');
+            $('#gender').val($(this).data('value'));
+        });
+
+        // PLZ: nur Ziffern erlauben
+        $(document).on('input', '#zip', function(){
+            this.value = this.value.replace(/[^0-9]/g, '');
+        });
+
         $(document).on('click', '#glattt-booking-form button[type="submit"]', function(){
             console.log('🟢 Jetzt-buchen-Button geklickt');
             // Matomo-Tracking: Klick auf Jetzt buchen
@@ -505,12 +527,30 @@ $('#glattt-start-booking').on('click', function() {
 
     function bookAppointment() {
   console.log('bookAppointment() wird ausgeführt, sende Daten:', $('#glattt-booking-form').serializeArray());
+
+  // Geschlecht-Pflichtfeld prüfen
+  if (!$('#gender').val()) {
+    alert('Bitte wähle Dein Geschlecht aus.');
+    return;
+  }
+
+  // PLZ validieren (5 Ziffern)
+  const zipVal = $('#zip').val().trim();
+  if (!/^[0-9]{5}$/.test(zipVal)) {
+    alert('Bitte gib eine gültige 5-stellige Postleitzahl ein.');
+    $('#zip').focus();
+    return;
+  }
+
   const p = { action:'glattt_book_appointment', nonce:glatttFrontend.nonce_book };
   $('#glattt-booking-form').serializeArray().forEach(f => p[f.name] = f.value);
 
   // Tracking-Daten sammeln und als JSON mitsenden
   const tracking = collectTrackingData();
   p.tracking_data = JSON.stringify(tracking);
+
+  // Buchungs-Overlay anzeigen
+  showBookingOverlay();
 
   $.post(glatttFrontend.ajax_url, p, resp => {
     if ( resp.success && resp.data.redirect ) {
@@ -524,6 +564,7 @@ $('#glattt-start-booking').on('click', function() {
       }
       window.location.href = resp.data.redirect;
     } else {
+      hideBookingOverlay();
       // Fehlermeldung aus der API oder Fallback
       const errorMsg = resp.data && resp.data.message 
         ? resp.data.message 
@@ -537,6 +578,21 @@ $('#glattt-start-booking').on('click', function() {
 
     function showSpinner(){ $('#glattt-booking-widget').addClass('loading'); }
     function hideSpinner(){ $('#glattt-booking-widget').removeClass('loading'); }
+
+    function showBookingOverlay() {
+      if ($('#booking-overlay').length) return;
+      $('#glattt-booking-widget').append(
+        '<div id="booking-overlay">' +
+          '<div class="booking-overlay-content">' +
+            '<div class="booking-overlay-spinner"></div>' +
+            '<p>Deine Buchung wird durchgeführt&hellip;</p>' +
+          '</div>' +
+        '</div>'
+      );
+    }
+    function hideBookingOverlay() {
+      $('#booking-overlay').remove();
+    }
     
     /**
      * Floating Labels: Erkennt ob Felder bereits gefüllt sind (z.B. durch Autofill)

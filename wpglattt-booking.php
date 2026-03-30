@@ -28,6 +28,16 @@ require_once WPGLATTT_PATH . 'includes/email-sender.php';
 require_once WPGLATTT_PATH . 'includes/bookings-overview.php';
 
 /**
+ * Globales Script: UTM-Parameter und Click-IDs in localStorage sichern.
+ * Läuft auf ALLEN Seiten (nicht nur Buchungsseiten), damit Kampagnen-Daten
+ * erfasst werden, auch wenn der User zuerst auf eine Übersichtsseite kommt.
+ */
+add_action( 'wp_enqueue_scripts', 'glattt_enqueue_campaign_persist', 1 );
+function glattt_enqueue_campaign_persist() {
+    wp_enqueue_script( 'glattt-campaign-persist', WPGLATTT_URL . 'assets/js/campaign-persist.js', [], WPGLATTT_VER, false );
+}
+
+/**
  * Enqueue Frontend Assets for Booking Shortcode
  */
 add_action( 'wp_enqueue_scripts', 'glattt_enqueue_booking_frontend_assets' );
