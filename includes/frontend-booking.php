@@ -611,6 +611,9 @@ $institute_whatsapp = $meta_whatsapp ?: '';
         }
     }
 
+    // --- D) Tracking-Daten an GlattHub API senden ---
+    glattt_send_booking_tracking( $appointment_id, $branchId, $serviceId, $client_id );
+
     wp_send_json_success([ 'redirect' => site_url( '/danke-buchung' ) ]);
 }
 // Cronjob: Jeden Sonntag den Plugin-Cache löschen
@@ -636,5 +639,52 @@ function glattt_clear_plugin_cache() {
     // WordPress Object Cache flushen
     if ( function_exists('wp_cache_flush') ) {
         wp_cache_flush();
+    }
+}
+
+/**
+ * Sendet Booking-Tracking-Daten an die GlattHub REST-API.
+ * Fire-and-forget: Fehler werden nur geloggt, blockieren die Buchung nicht.
+ */
+function glattt_send_booking_tracking( $appointment_id, $branch_id, $service_id, $client_id ) {
+    $api_url   = rtrim( get_option( 'glattt_hub_api_url', '' ), '/' );
+    $api_token = get_option( 'glattt_hub_api_token', '' );
+
+    if ( empty( $api_url ) || empty( $api_token ) || empty( $appointment_id ) ) {
+        return;
+    }
+
+    // Tracking-Daten aus dem Frontend-JS (als JSON-String mitgeschickt)
+    $tracking_json = isset( $_POST['tracking_data'] ) ? wp_unslash( $_POST['tracking_data'] ) : '{}';
+    $tracking      = json_decode( $tracking_json, true );
+    if ( ! is_array( $tracking ) ) {
+        $tracking = [];
+    }
+
+    $body = array_merge( $tracking, [
+        'appointment_id' => sanitize_text_field( $appointment_id ),
+        'branch_id'      => sanitize_text_field( $branch_id ),
+        'service_id'     => sanitize_text_field( $service_id ),
+        'client_id'      => sanitize_text_field( $client_id ),
+        'booked_at'      => current_time( 'c' ),
+    ] );
+
+    $response = wp_remote_post( $api_url . '/booking-tracking', [
+        'timeout' => 5,
+        'headers' => [
+            'Authorization' => 'Bearer ' . $api_token,
+            'Content-Type'  => 'application/json',
+            'Accept'        => 'application/json',
+        ],
+        'body' => wp_json_encode( $body ),
+    ] );
+
+    if ( is_wp_error( $response ) ) {
+        error_log( '[glattt-booking] Tracking API Fehler: ' . $response->get_error_message() );
+    } else {
+        $code = wp_remote_retrieve_response_code( $response );
+        if ( $code !== 201 ) {
+            error_log( '[glattt-booking] Tracking API HTTP ' . $code . ': ' . wp_remote_retrieve_body( $response ) );
+        }
     }
 }

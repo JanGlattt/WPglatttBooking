@@ -25,6 +25,26 @@ function glattt_settings_init() {
         );
         register_setting( 'glattt-booking', 'glattt_' . $key );
     }
+
+    // GlattHub API Sektion
+    add_settings_section(
+        'glattt_hub_api_section',
+        'GlattHub API (Booking-Tracking)',
+        function() {
+            echo '<p>Verbindung zur GlattHub REST-API für Booking-Tracking-Daten.</p>';
+        },
+        'glattt-booking'
+    );
+
+    add_settings_field( 'glattt_hub_api_url', 'API URL', 'glattt_render_hub_api_url', 'glattt-booking', 'glattt_hub_api_section' );
+    register_setting( 'glattt-booking', 'glattt_hub_api_url', [
+        'sanitize_callback' => 'esc_url_raw',
+    ] );
+
+    add_settings_field( 'glattt_hub_api_token', 'API Token', 'glattt_render_hub_api_token', 'glattt-booking', 'glattt_hub_api_section' );
+    register_setting( 'glattt-booking', 'glattt_hub_api_token', [
+        'sanitize_callback' => 'sanitize_text_field',
+    ] );
 }
 
 function glattt_render_username() {
@@ -38,6 +58,18 @@ function glattt_render_password() {
 function glattt_render_business_id() {
     $v = esc_attr( get_option( 'glattt_business_id', '' ) );
     echo "<input type='text' name='glattt_business_id' value='$v' class='regular-text'>";
+}
+
+function glattt_render_hub_api_url() {
+    $v = esc_attr( get_option( 'glattt_hub_api_url', '' ) );
+    echo "<input type='url' name='glattt_hub_api_url' value='$v' class='regular-text' placeholder='https://hub.glattt.com/api/v1'>";
+    echo "<p class='description'>Basis-URL der GlattHub REST-API (z.B. https://hub.glattt.com/api/v1)</p>";
+}
+
+function glattt_render_hub_api_token() {
+    $v = esc_attr( get_option( 'glattt_hub_api_token', '' ) );
+    echo "<input type='password' name='glattt_hub_api_token' value='$v' class='regular-text' autocomplete='off'>";
+    echo "<p class='description'>Bearer-Token mit Scope <code>booking-tracking:write</code></p>";
 }
 
 function glattt_options_page() {

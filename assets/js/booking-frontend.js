@@ -41,6 +41,88 @@ const urlParams     = new URLSearchParams(window.location.search);
 const widget        = $('#glattt-booking-widget');
 const defaultBranch = widget.attr('data-default-branch') || urlParams.get('id');
 
+/**
+ * Sammelt Browser- und Kampagnen-Daten für das Booking-Tracking.
+ * Wird beim Buchungsabschluss an das WP-Backend mitgeschickt.
+ */
+function collectTrackingData() {
+    const ua = navigator.userAgent || '';
+    const params = new URLSearchParams(window.location.search);
+
+    // Device-Type Erkennung
+    let deviceType = 'desktop';
+    if (/Mobi|Android/i.test(ua)) {
+        deviceType = (Math.min(screen.width, screen.height) > 600) ? 'tablet' : 'mobile';
+    }
+
+    // Browser-Erkennung
+    let browserName = '', browserVersion = '';
+    if (/Edg\//i.test(ua)) {
+        browserName = 'Edge';
+        browserVersion = (ua.match(/Edg\/([\d.]+)/) || [])[1] || '';
+    } else if (/Chrome\//i.test(ua) && !/Chromium/i.test(ua)) {
+        browserName = 'Chrome';
+        browserVersion = (ua.match(/Chrome\/([\d.]+)/) || [])[1] || '';
+    } else if (/Safari\//i.test(ua) && !/Chrome/i.test(ua)) {
+        browserName = 'Safari';
+        browserVersion = (ua.match(/Version\/([\d.]+)/) || [])[1] || '';
+    } else if (/Firefox\//i.test(ua)) {
+        browserName = 'Firefox';
+        browserVersion = (ua.match(/Firefox\/([\d.]+)/) || [])[1] || '';
+    }
+
+    // OS-Erkennung
+    let osName = '', osVersion = '';
+    if (/Windows/i.test(ua)) {
+        osName = 'Windows';
+        osVersion = (ua.match(/Windows NT ([\d.]+)/) || [])[1] || '';
+    } else if (/Mac OS X/i.test(ua)) {
+        osName = 'macOS';
+        osVersion = (ua.match(/Mac OS X ([\d_]+)/) || [])[1]?.replace(/_/g, '.') || '';
+    } else if (/Android/i.test(ua)) {
+        osName = 'Android';
+        osVersion = (ua.match(/Android ([\d.]+)/) || [])[1] || '';
+    } else if (/iPhone|iPad/i.test(ua)) {
+        osName = 'iOS';
+        osVersion = (ua.match(/OS ([\d_]+)/) || [])[1]?.replace(/_/g, '.') || '';
+    } else if (/Linux/i.test(ua)) {
+        osName = 'Linux';
+    }
+
+    // Verweildauer berechnen
+    let bookingDuration = null;
+    const startTime = sessionStorage.getItem('glatttBookingStartTime');
+    if (startTime) {
+        bookingDuration = Math.round((Date.now() - parseInt(startTime, 10)) / 1000);
+    }
+
+    return {
+        user_agent: ua,
+        browser_name: browserName,
+        browser_version: browserVersion,
+        os_name: osName,
+        os_version: osVersion,
+        device_type: deviceType,
+        screen_width: screen.width || null,
+        screen_height: screen.height || null,
+        viewport_width: window.innerWidth || null,
+        viewport_height: window.innerHeight || null,
+        language: navigator.language || null,
+        referrer: document.referrer || null,
+        landing_page: window.location.href || null,
+        utm_source: params.get('utm_source') || null,
+        utm_medium: params.get('utm_medium') || null,
+        utm_campaign: params.get('utm_campaign') || null,
+        utm_content: params.get('utm_content') || null,
+        utm_term: params.get('utm_term') || null,
+        gclid: params.get('gclid') || null,
+        fbclid: params.get('fbclid') || null,
+        booking_duration_seconds: bookingDuration,
+        cookie_consent: (typeof window.Borlabs !== 'undefined' && window.Borlabs.Cookie)
+            ? 'borlabs' : null
+    };
+}
+
     function init() {
         // erst mal Overlay anzeigen, Schritte blockieren
 $('#glattt-start-booking').on('click', function() {
@@ -425,6 +507,10 @@ $('#glattt-start-booking').on('click', function() {
   console.log('bookAppointment() wird ausgeführt, sende Daten:', $('#glattt-booking-form').serializeArray());
   const p = { action:'glattt_book_appointment', nonce:glatttFrontend.nonce_book };
   $('#glattt-booking-form').serializeArray().forEach(f => p[f.name] = f.value);
+
+  // Tracking-Daten sammeln und als JSON mitsenden
+  const tracking = collectTrackingData();
+  p.tracking_data = JSON.stringify(tracking);
 
   $.post(glatttFrontend.ajax_url, p, resp => {
     if ( resp.success && resp.data.redirect ) {
