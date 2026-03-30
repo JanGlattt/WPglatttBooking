@@ -122,6 +122,7 @@ function glattt_render_booking_shortcode( $atts ) {
                 <button type="button" data-value="PREFER_NOT_TO_SAY" class="gender-option">Keine Angabe</button>
               </div>
               <input type="hidden" name="gender" id="gender" required />
+              <div class="field-error" id="gender-error">Bitte wähle Dein Geschlecht aus.</div>
             </div>
 
             <div class="form-field">

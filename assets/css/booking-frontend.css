@@ -81,6 +81,19 @@
   to { transform: rotate(360deg); }
 }
 
+/* Inline-Fehlermeldungen */
+.field-error {
+  display: none;
+  color: #d32f2f;
+  font-size: 0.85rem;
+  margin-top: 0.35rem;
+  font-family: 'Dosis', sans-serif;
+}
+.field-has-error {
+  outline: 2px solid #d32f2f;
+  border-radius: 0.5rem;
+}
+
 /* Booking-Overlay (während AJAX-Buchung) */
 #booking-overlay {
   position: absolute;
