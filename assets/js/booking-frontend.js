@@ -193,8 +193,7 @@ $('#glattt-start-booking').on('click', function() {
             $('.gender-option').removeClass('active');
             $(this).addClass('active');
             $('#gender').val($(this).data('value'));
-            $('#gender-switch').removeClass('field-has-error');
-            $('#gender-error').hide();
+            $('#gender-tooltip').removeClass('visible');
         });
 
         // PLZ: nur Ziffern erlauben
@@ -532,9 +531,10 @@ $('#glattt-start-booking').on('click', function() {
 
   // Geschlecht-Pflichtfeld prüfen
   if (!$('#gender').val()) {
-    $('#gender-switch').addClass('field-has-error');
-    $('#gender-error').show();
+    var $tooltip = $('#gender-tooltip');
+    $tooltip.addClass('visible');
     $('html, body').animate({ scrollTop: $('#gender-switch').offset().top - 100 }, 300);
+    setTimeout(function() { $tooltip.removeClass('visible'); }, 3000);
     return;
   }
 

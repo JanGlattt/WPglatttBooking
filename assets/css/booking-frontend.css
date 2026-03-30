@@ -84,14 +84,49 @@
 /* Inline-Fehlermeldungen */
 .field-error {
   display: none;
-  color: #d32f2f;
+  color: #E1B520;
   font-size: 0.85rem;
   margin-top: 0.35rem;
   font-family: 'Dosis', sans-serif;
 }
 .field-has-error {
-  outline: 2px solid #d32f2f;
+  outline: 2px solid #E1B520;
   border-radius: 0.5rem;
+}
+
+/* Validation Tooltip (wie native Browser-Validierung) */
+.validation-tooltip {
+  display: none;
+  position: relative;
+  margin-top: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 0.4rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  font-family: 'Dosis', sans-serif;
+  font-size: 0.9rem;
+  color: #333;
+  width: fit-content;
+}
+.validation-tooltip::before {
+  content: '';
+  position: absolute;
+  top: -6px;
+  left: 1.5rem;
+  width: 10px;
+  height: 10px;
+  background: #fff;
+  border-left: 1px solid #ccc;
+  border-top: 1px solid #ccc;
+  transform: rotate(45deg);
+}
+.validation-tooltip-icon {
+  color: #E1B520;
+  margin-right: 0.3rem;
+}
+.validation-tooltip.visible {
+  display: block;
 }
 
 /* Booking-Overlay (während AJAX-Buchung) */
