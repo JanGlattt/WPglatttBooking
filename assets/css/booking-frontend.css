@@ -663,40 +663,6 @@
   font-weight: 600 !important;
 }
 
-/* ─── Date Input (Geburtsdatum) ─── */
-#glattt-booking-widget .step-2 .form-field input[type="date"] {
-  width: 100% !important;
-  height: 3.5rem !important;
-  padding: 0.5rem 1rem 0 1rem !important;
-  font-size: 1rem !important;
-  border: 2px solid #ccc !important;
-  border-radius: 0.75rem !important;
-  background: transparent !important;
-  background-color: transparent !important;
-  outline: none !important;
-  box-shadow: none !important;
-  -webkit-box-shadow: none !important;
-  transition: border-color 0.2s ease !important;
-  box-sizing: border-box !important;
-  margin: 0 !important;
-  font-family: inherit !important;
-  color: #333 !important;
-  -webkit-appearance: none !important;
-}
-
-#glattt-booking-widget .step-2 .form-field input[type="date"]:focus {
-  border-color: #E1B520 !important;
-  box-shadow: none !important;
-}
-
-/* Date-Input: Label immer oben (da Browser immer placeholder zeigt) */
-#glattt-booking-widget .step-2 .form-field input[type="date"] + label {
-  top: 0 !important;
-  transform: translateY(-50%) !important;
-  font-size: 0.75rem !important;
-  color: #E1B520 !important;
-}
-
 /* ─── Mobile Responsive ─── */
 @media (max-width: 480px) {
   #glattt-booking-widget .step-2 .gender-switch {

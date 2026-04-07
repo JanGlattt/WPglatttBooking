@@ -136,10 +136,6 @@ function glattt_render_booking_shortcode( $atts ) {
               <label for="lastname">Nachname*</label>
             </div>
             <div class="form-field">
-              <input type="date" name="birthday" id="birthday" required max="<?php echo date('Y-m-d'); ?>" />
-              <label for="birthday">Geburtsdatum*</label>
-            </div>
-            <div class="form-field">
               <input type="email" name="email" id="email" placeholder=" " required />
               <label for="email">E-Mail-Adresse*</label>
             </div>
@@ -148,12 +144,12 @@ function glattt_render_booking_shortcode( $atts ) {
               <label for="phone">Handy*</label>
             </div>
             <div class="form-field">
-              <input type="text" name="zip" id="zip" placeholder=" " required pattern="[0-9]{5}" maxlength="5" inputmode="numeric" title="Bitte gib eine gültige 5-stellige Postleitzahl ein" />
-              <label for="zip">Postleitzahl*</label>
-            </div>
-            <div class="form-field">
               <input type="text" name="message" id="message" placeholder=" " required />
               <label for="message">Welche Körperzonen willst Du behandeln lassen?*</label>
+            </div>
+            <div class="form-checkbox">
+              <input type="checkbox" name="english" id="english" value="1" />
+              <label for="english">I would like my consultation in English.</label>
             </div>
             <div class="form-checkbox">
               <input type="checkbox" name="gdpr" id="gdpr" required />
@@ -349,8 +345,6 @@ function glattt_book_appointment() {
     $phone     = $input['phone'];
     $message   = $input['message'];
     $gender    = $input['gender'] ?? '';
-    $birthday  = $input['birthday'] ?? '';
-    $zip       = $input['zip'] ?? '';
     $staffId   = $input['staff'] ?? '';
 
     // Telefonnummer normalisieren (ins Format 491234567890)
@@ -379,16 +373,10 @@ function glattt_book_appointment() {
         $client_id = $existing_client['clientId'];
         error_log( "✅ Bestehender Kunde gefunden! ClientId: {$client_id}" );
 
-        // Geschlecht, Geburtsdatum und PLZ aktualisieren (falls neu erfasst)
+        // Geschlecht aktualisieren (falls neu erfasst)
         $update_payload = [];
         if ( ! empty( $gender ) ) {
             $update_payload['gender'] = $gender;
-        }
-        if ( ! empty( $birthday ) ) {
-            $update_payload['birthDate'] = $birthday;
-        }
-        if ( ! empty( $zip ) ) {
-            $update_payload['address'] = [ 'postalCode' => $zip ];
         }
         if ( ! empty( $update_payload ) ) {
             wp_remote_request(
@@ -421,12 +409,6 @@ function glattt_book_appointment() {
         if ( ! empty( $gender ) ) {
             $client_payload['gender'] = $gender;
         }
-        if ( ! empty( $birthday ) ) {
-            $client_payload['birthDate'] = $birthday;
-        }
-        if ( ! empty( $zip ) ) {
-            $client_payload['address'] = [ 'postalCode' => $zip ];
-        }
         $client_resp = wp_remote_post(
             "https://api-gateway-eu.phorest.com/third-party-api-server/api/business/{$business_id}/client",
             [
@@ -455,9 +437,10 @@ function glattt_book_appointment() {
     }
 
     // --- B) Termin buchen (200 oder 201 OK) ---
+    $english = ! empty( $input['english'] );
     $booking_note = "Körperzonen: {$message}";
-    if ( ! empty( $zip ) ) {
-        $booking_note .= " | PLZ: {$zip}";
+    if ( $english ) {
+        $booking_note .= " | ⚠️ BERATUNG AUF ENGLISCH gewünscht";
     }
     
     $booking_payload = [

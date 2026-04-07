@@ -196,11 +196,6 @@ $('#glattt-start-booking').on('click', function() {
             $('#gender-tooltip').removeClass('visible');
         });
 
-        // PLZ: nur Ziffern erlauben
-        $(document).on('input', '#zip', function(){
-            this.value = this.value.replace(/[^0-9]/g, '');
-        });
-
         $(document).on('click', '#glattt-booking-form button[type="submit"]', function(){
             console.log('🟢 Jetzt-buchen-Button geklickt');
             // Matomo-Tracking: Klick auf Jetzt buchen
@@ -535,14 +530,6 @@ $('#glattt-start-booking').on('click', function() {
     $tooltip.addClass('visible');
     $('html, body').animate({ scrollTop: $('#gender-switch').offset().top - 100 }, 300);
     setTimeout(function() { $tooltip.removeClass('visible'); }, 3000);
-    return;
-  }
-
-  // PLZ validieren (5 Ziffern)
-  const zipVal = $('#zip').val().trim();
-  if (!/^[0-9]{5}$/.test(zipVal)) {
-    alert('Bitte gib eine gültige 5-stellige Postleitzahl ein.');
-    $('#zip').focus();
     return;
   }
 
