@@ -26,7 +26,21 @@ jQuery(function($){
         return false;
       }
       fbq('track', 'InitiateCheckout');
-      console.log('✅ Meta Pixel: InitiateCheckout Event getrackt');
+      console.log('✅ Meta Pixel: InitiateCheckout Event getrackt (Kaufvorgang starten)');
+      return true;
+    }
+
+    // Meta Pixel Lead mit echten Nutzerdaten (bei erfolgreicher Buchung)
+    function fbq_track_lead(email, phone) {
+      if (typeof fbq === 'undefined') {
+        console.log('⚠️ fbq nicht verfügbar - Meta Pixel Lead übersprungen');
+        return false;
+      }
+      fbq('track', 'Lead', {}, {
+        em: email,    // Meta hasht die E-Mail intern
+        ph: phone     // Meta hasht die Telefonnummer intern
+      });
+      console.log('✅ Meta Pixel: Lead Event getrackt (Email & Phone)');
       return true;
     }
     console.log('🔔 booking-frontend.js geladen');
@@ -545,6 +559,11 @@ $('#glattt-start-booking').on('click', function() {
 
   $.post(glatttFrontend.ajax_url, p, resp => {
     if ( resp.success && resp.data.redirect ) {
+      // 🎯 Meta Pixel Lead mit echten Nutzerdaten
+      const email = $('#email').val();
+      const phone = $('#phone').val();
+      fbq_track_lead(email, phone);
+
       const startTime = sessionStorage.getItem('glatttBookingStartTime');
       if (startTime && window._paq) {
         const durationMs = Date.now() - parseInt(startTime, 10);
