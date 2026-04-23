@@ -45,6 +45,23 @@ function glattt_settings_init() {
     register_setting( 'glattt-booking', 'glattt_hub_api_token', [
         'sanitize_callback' => 'sanitize_text_field',
     ] );
+
+    // Meta Conversion Tracking Sektion
+    add_settings_section(
+        'glattt_meta_tracking_section',
+        'Meta Conversion Tracking',
+        function() {
+            echo '<p>Einstellungen für den Meta Pixel Lead-Event. Der Lead-Wert berechnet sich aus: <strong>Ø Vertragswert × Show-Rate × Abschlussrate</strong>.</p>';
+        },
+        'glattt-booking'
+    );
+
+    add_settings_field( 'glattt_meta_lead_value', 'Lead-Wert (€)', 'glattt_render_meta_lead_value', 'glattt-booking', 'glattt_meta_tracking_section' );
+    register_setting( 'glattt-booking', 'glattt_meta_lead_value', [
+        'sanitize_callback' => function( $val ) {
+            return max( 0, floatval( str_replace( ',', '.', $val ) ) );
+        },
+    ] );
 }
 
 function glattt_render_username() {
@@ -70,6 +87,12 @@ function glattt_render_hub_api_token() {
     $v = esc_attr( get_option( 'glattt_hub_api_token', '' ) );
     echo "<input type='password' name='glattt_hub_api_token' value='$v' class='regular-text' autocomplete='off'>";
     echo "<p class='description'>Bearer-Token mit Scope <code>booking-tracking:write</code></p>";
+}
+
+function glattt_render_meta_lead_value() {
+    $v = esc_attr( get_option( 'glattt_meta_lead_value', '0' ) );
+    echo "<input type='number' name='glattt_meta_lead_value' value='$v' class='small-text' min='0' step='0.01'> €";
+    echo "<p class='description'>Erwarteter Wert pro Lead-Buchung. Formel: Ø Vertragswert × Show-Rate × Abschlussrate.<br>Beispiel: 2400 × 0,70 × 0,50 = <strong>840 €</strong></p>";
 }
 
 function glattt_options_page() {

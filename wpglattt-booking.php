@@ -49,9 +49,10 @@ function glattt_enqueue_booking_frontend_assets() {
         wp_enqueue_script( 'glattt-booking-frontend', WPGLATTT_URL . 'assets/js/booking-frontend.js', ['jquery'], WPGLATTT_VER, true );
 
         wp_localize_script( 'glattt-booking-frontend', 'glatttFrontend', [
-            'ajax_url'   => admin_url( 'admin-ajax.php' ),
-            'nonce_get'  => wp_create_nonce( 'glattt_get_availability' ),
-            'nonce_book' => wp_create_nonce( 'glattt_book_appointment' ),
+            'ajax_url'        => admin_url( 'admin-ajax.php' ),
+            'nonce_get'       => wp_create_nonce( 'glattt_get_availability' ),
+            'nonce_book'      => wp_create_nonce( 'glattt_book_appointment' ),
+            'meta_lead_value' => (float) get_option( 'glattt_meta_lead_value', 0 ),
         ] );
     }
 }

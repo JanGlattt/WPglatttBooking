@@ -36,11 +36,15 @@ jQuery(function($){
         console.log('⚠️ fbq nicht verfügbar - Meta Pixel Lead übersprungen');
         return false;
       }
-      fbq('track', 'Lead', {}, {
+      var leadValue = (glatttFrontend.meta_lead_value !== undefined) ? parseFloat(glatttFrontend.meta_lead_value) : 0;
+      fbq('track', 'Lead', {
+        value: leadValue,
+        currency: 'EUR'
+      }, {
         em: email,    // Meta hasht die E-Mail intern
         ph: phone     // Meta hasht die Telefonnummer intern
       });
-      console.log('✅ Meta Pixel: Lead Event getrackt (Email & Phone)');
+      console.log('✅ Meta Pixel: Lead Event getrackt (Email & Phone, value: 0, currency: EUR)');
       return true;
     }
     console.log('🔔 booking-frontend.js geladen');
