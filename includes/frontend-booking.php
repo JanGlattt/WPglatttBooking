@@ -147,6 +147,12 @@ function glattt_render_booking_shortcode( $atts ) {
               <input type="text" name="message" id="message" placeholder=" " required />
               <label for="message">Welche Körperzonen willst Du behandeln lassen?*</label>
             </div>
+            <?php if ( get_option( 'glattt_coupon_enabled', '0' ) === '1' ) : ?>
+            <div class="form-field">
+              <input type="text" name="coupon" id="coupon" placeholder=" " />
+              <label for="coupon">Coupon-Code (optional)</label>
+            </div>
+            <?php endif; ?>
             <div class="form-checkbox">
               <input type="checkbox" name="english" id="english" value="1" />
               <label for="english">I would like my consultation in English.</label>
@@ -346,6 +352,7 @@ function glattt_book_appointment() {
     $message   = $input['message'];
     $gender    = $input['gender'] ?? '';
     $staffId   = $input['staff'] ?? '';
+    $coupon    = $input['coupon'] ?? '';
 
     // Telefonnummer normalisieren (ins Format 491234567890)
     $normalized_phone = glattt_normalize_german_phone( $phone );
@@ -441,6 +448,9 @@ function glattt_book_appointment() {
     $booking_note = "Körperzonen: {$message}";
     if ( $english ) {
         $booking_note .= " | ⚠️ BERATUNG AUF ENGLISCH gewünscht";
+    }
+    if ( ! empty( $coupon ) ) {
+        $booking_note .= " | Coupon-Code: {$coupon}";
     }
     
     $booking_payload = [

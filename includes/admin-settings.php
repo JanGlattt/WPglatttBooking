@@ -46,6 +46,23 @@ function glattt_settings_init() {
         'sanitize_callback' => 'sanitize_text_field',
     ] );
 
+    // Formular-Optionen Sektion
+    add_settings_section(
+        'glattt_form_options_section',
+        'Formular-Optionen',
+        function() {
+            echo '<p>Optionale Felder im Buchungsformular ein- oder ausblenden.</p>';
+        },
+        'glattt-booking'
+    );
+
+    add_settings_field( 'glattt_coupon_enabled', 'Coupon-Code Feld', 'glattt_render_coupon_enabled', 'glattt-booking', 'glattt_form_options_section' );
+    register_setting( 'glattt-booking', 'glattt_coupon_enabled', [
+        'sanitize_callback' => function( $val ) {
+            return $val ? '1' : '0';
+        },
+    ] );
+
     // Meta Conversion Tracking Sektion
     add_settings_section(
         'glattt_meta_tracking_section',
@@ -87,6 +104,12 @@ function glattt_render_hub_api_token() {
     $v = esc_attr( get_option( 'glattt_hub_api_token', '' ) );
     echo "<input type='password' name='glattt_hub_api_token' value='$v' class='regular-text' autocomplete='off'>";
     echo "<p class='description'>Bearer-Token mit Scope <code>booking-tracking:write</code></p>";
+}
+
+function glattt_render_coupon_enabled() {
+    $v = get_option( 'glattt_coupon_enabled', '0' );
+    echo "<label><input type='checkbox' name='glattt_coupon_enabled' value='1'" . checked( '1', $v, false ) . "> Coupon-Code Feld im Buchungsformular anzeigen</label>";
+    echo "<p class='description'>Wenn aktiviert, erscheint im Buchungsformular (Schritt 2) ein optionales Feld für Coupon-Codes. Der eingegebene Code wird als Notiz zur Buchung in Phorest gespeichert.</p>";
 }
 
 function glattt_render_meta_lead_value() {
